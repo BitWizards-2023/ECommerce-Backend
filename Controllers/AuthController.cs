@@ -1,6 +1,8 @@
 using ECommerceBackend.Services;
 using Microsoft.AspNetCore.Mvc;
 using ECommerceBackend.DTOs.Request;
+using Microsoft.AspNetCore.Authorization;
+using ECommerceBackend.Helpers;
 
 namespace ECommerceBackend.Controllers
 {
@@ -91,5 +93,8 @@ namespace ECommerceBackend.Controllers
         return Ok(new { message = "Password reset successfully" });
         }
 
-    }    
+     
+    }
+
+        
 }

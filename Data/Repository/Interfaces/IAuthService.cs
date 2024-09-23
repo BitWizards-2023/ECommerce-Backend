@@ -1,3 +1,5 @@
+using ECommerceBackend.Models;
+
 namespace ECommerceBackend.Services
 {
     public interface IAuthService
@@ -19,5 +21,6 @@ namespace ECommerceBackend.Services
 
         // Resets the password using the provided reset token
         bool ResetPassword(string email, string resetToken, string newPassword);
+
     }
 }

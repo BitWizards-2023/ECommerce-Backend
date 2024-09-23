@@ -207,7 +207,7 @@ public bool Register(string email, string password, string username,string role,
         _context.Users.ReplaceOne(u => u.Id == user.Id, user);
         return true;
     }
+      
 
 }
-
 }

@@ -5,7 +5,8 @@ using System.Text;
 using ECommerceBackend.Models;
 using ECommerceBackend.Data.Contexts;
 using ECommerceBackend.Services;
-
+using ECommerceBackend.Data.Repository.Interfaces;
+using ECommerceBackend.Data.Repository.Implementations;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,15 +14,14 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.SetMinimumLevel(LogLevel.Debug); // Set to Debug for detailed logs
-builder.Services.AddControllers();
 
 // Configure DatabaseSettings
 builder.Services.Configure<DatabaseSettings>(builder.Configuration.GetSection(nameof(DatabaseSettings)));
 builder.Services.AddSingleton<MongoDbContext>();
 
-// Add services to the container.
-builder.Services.AddSingleton<IAuthService, AuthService>();
-builder.Services.AddSingleton<MongoDbContext>();
+// Register the AuthService and other services
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IUserServices,UserService>();
 
 // Add controllers
 builder.Services.AddControllers();
@@ -30,9 +30,8 @@ builder.Services.AddControllers();
 var jwtSettingsSection = builder.Configuration.GetSection(nameof(JwtSettings));
 builder.Services.Configure<JwtSettings>(jwtSettingsSection);
 
-// **Check JwtSettings here**
+// Check JwtSettings here
 var jwtSettings = jwtSettingsSection.Get<JwtSettings>();
-
 if (jwtSettings == null)
 {
     throw new Exception("JWT settings are not configured properly in appsettings.json.");
@@ -72,13 +71,16 @@ builder.Services.AddAuthentication(options =>
 // Configure the default authorization policy
 builder.Services.AddAuthorization(options =>
 {
+    // Default policy requires authentication
     options.DefaultPolicy = new AuthorizationPolicyBuilder()
             .AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme)
             .RequireAuthenticatedUser()
             .Build();
 
+    // Define role-based policy for Admin
+    options.AddPolicy("AdminPolicy", policy =>
+        policy.RequireRole("Admin"));
 });
-
 
 // Configure CORS
 builder.Services.AddCors(options =>
@@ -94,11 +96,11 @@ builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
-
 app.UseHttpsRedirection();
 app.UseCors("CorsPolicy");
-app.UseAuthentication();
+app.UseAuthentication(); 
 app.UseAuthorization();
+
 app.MapControllers();
 app.MapHealthChecks("/health");
 
