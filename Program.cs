@@ -1,8 +1,11 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Authorization;
 using System.Text;
 using ECommerceBackend.Models;
 using ECommerceBackend.Data.Contexts;
+using ECommerceBackend.Services;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,31 +15,16 @@ builder.Logging.AddConsole();
 builder.Logging.SetMinimumLevel(LogLevel.Debug); // Set to Debug for detailed logs
 builder.Services.AddControllers();
 
+// Configure DatabaseSettings
+builder.Services.Configure<DatabaseSettings>(builder.Configuration.GetSection(nameof(DatabaseSettings)));
+builder.Services.AddSingleton<MongoDbContext>();
+
 // Add services to the container.
+builder.Services.AddSingleton<IAuthService, AuthService>();
+builder.Services.AddSingleton<MongoDbContext>();
 
 // Add controllers
 builder.Services.AddControllers();
-
-// Configure DatabaseSettings
-builder.Services.Configure<DatabaseSettings>(builder.Configuration.GetSection(nameof(DatabaseSettings)));
-
-// **Check DatabaseSettings here**
-var databaseSettingsSection = builder.Configuration.GetSection(nameof(DatabaseSettings));
-var databaseSettings = databaseSettingsSection.Get<DatabaseSettings>();
-
-if (databaseSettings == null)
-{
-    throw new Exception("Database settings are not configured properly in appsettings.json.");
-}
-
-if (string.IsNullOrEmpty(databaseSettings.ConnectionString) ||
-    string.IsNullOrEmpty(databaseSettings.DatabaseName))
-{
-    throw new Exception("Database settings are missing required properties.");
-}
-
-// Register MongoDbContext
-builder.Services.AddSingleton<MongoDbContext>();
 
 // Configure JwtSettings
 var jwtSettingsSection = builder.Configuration.GetSection(nameof(JwtSettings));
@@ -81,6 +69,17 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+// Configure the default authorization policy
+builder.Services.AddAuthorization(options =>
+{
+    options.DefaultPolicy = new AuthorizationPolicyBuilder()
+            .AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme)
+            .RequireAuthenticatedUser()
+            .Build();
+
+});
+
+
 // Configure CORS
 builder.Services.AddCors(options =>
 {
@@ -95,24 +94,12 @@ builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-
-if (app.Environment.IsDevelopment())
-{
-    app.UseDeveloperExceptionPage();
-}
 
 app.UseHttpsRedirection();
-
 app.UseCors("CorsPolicy");
-
 app.UseAuthentication();
 app.UseAuthorization();
-
 app.MapControllers();
-
-
-// Map health check endpoint
 app.MapHealthChecks("/health");
 
 app.Run();

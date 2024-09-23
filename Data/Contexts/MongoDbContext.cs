@@ -1,39 +1,33 @@
 using Microsoft.Extensions.Options;
-using Microsoft.Extensions.Logging;
-using MongoDB.Bson;
 using MongoDB.Driver;
 using ECommerceBackend.Models;
 
 namespace ECommerceBackend.Data.Contexts
 {
     public class MongoDbContext
+{
+    private readonly IMongoDatabase _database;
+    private readonly ILogger<MongoDbContext> _logger;
+
+    public MongoDbContext(IOptions<DatabaseSettings> dbSettings, ILogger<MongoDbContext> logger)
     {
-        private readonly IMongoDatabase _database;
-        private readonly ILogger<MongoDbContext> _logger;
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-        public MongoDbContext(IOptions<DatabaseSettings> dbSettings, ILogger<MongoDbContext> logger)
+        try
         {
-            _logger = logger;
+            var client = new MongoClient(dbSettings.Value.ConnectionString.ToString());
+            _database = client.GetDatabase(dbSettings.Value.DatabaseName);
 
-            try
-            {
-                var client = new MongoClient(dbSettings.Value.ConnectionString);
-                _database = client.GetDatabase(dbSettings.Value.DatabaseName);
-
-                // Ping the database to check the connection
-                _database.RunCommandAsync((Command<BsonDocument>)"{ping:1}").Wait();
-
-                 Console.WriteLine("Pinged your deployment. You successfully connected to MongoDB!");
-                _logger.LogInformation("Successfully connected to MongoDB database: {DatabaseName}", dbSettings.Value.DatabaseName);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An error occurred while connecting to the MongoDB database.");
-                Console.WriteLine(ex);
-                throw;
-            }
+            _logger.LogInformation("Successfully connected to MongoDB Atlas database: {DatabaseName}", dbSettings.Value.DatabaseName);
         }
-
-       
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "An error occurred while connecting to MongoDB Atlas.");
+            throw;
+        }
     }
+
+    public IMongoCollection<User> Users => _database.GetCollection<User>("Users");
+}
+
 }
