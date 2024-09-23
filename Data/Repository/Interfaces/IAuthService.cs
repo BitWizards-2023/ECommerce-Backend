@@ -10,5 +10,8 @@ namespace ECommerceBackend.Services
 
         // Generates a new JWT using a valid refresh token
         string RefreshToken(string token, string refreshToken);
+
+        // Logs out a user by invalidating their refresh token
+        void Logout(string email);
     }
 }

@@ -53,5 +53,12 @@ namespace ECommerceBackend.Controllers
 
             return Ok(new { token = newJwtToken });
         }
+           
+        [HttpPost("logout")]
+         public IActionResult Logout([FromBody] LogoutRequest model)
+        {
+        _authService.Logout(model.Email);
+        return Ok(new { message = "Logged out successfully" });
+        }        
     }
 }

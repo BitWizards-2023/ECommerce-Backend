@@ -131,6 +131,17 @@ public class AuthService : IAuthService
         _context.Users.InsertOne(newUser);
         return true;
     }
+       public void Logout(string email)
+    {
+        var user = _context.Users.Find(u => u.Email == email).FirstOrDefault();
+
+        if (user != null)
+        {
+            user.RefreshToken = null;
+            user.RefreshTokenExpiryTime = DateTime.MinValue; 
+            _context.Users.ReplaceOne(u => u.Id == user.Id, user);
+        }
+    }
 }
 
 }
