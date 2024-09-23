@@ -113,28 +113,44 @@ public class AuthService : IAuthService
 
         return newJwtToken;
     }
+public bool Register(string email, string password, string username,string role, string firstName, string lastName, AddressRequest address, string phoneNumber)
+{
+    if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+        throw new ArgumentException("Email and password must be provided.");
 
-    public bool Register(string Email, string password)
+    var existingUser = _context.Users.Find(u => u.Email == email || u.Username == username).FirstOrDefault();
+
+    if (existingUser != null)
     {
-        if (string.IsNullOrWhiteSpace(Email) || string.IsNullOrWhiteSpace(password))
-            throw new ArgumentException("Email and password must be provided.");
-
-        var existingUser = _context.Users.Find(u => u.Email == Email).FirstOrDefault();
-        
-        if (existingUser != null)
-        {
-            return false;
-        }
-
-        var newUser = new User
-        {
-            Email = Email,
-            PasswordHash = PasswordHasher.HashPassword(password),
-        };
-
-        _context.Users.InsertOne(newUser);
-        return true;
+        return false; // Email or Username already taken
     }
+
+    var newUser = new User
+    {
+        Email = email,
+        Username = username,
+        PasswordHash = PasswordHasher.HashPassword(password),
+        FirstName = firstName,
+        LastName = lastName,
+        Address = new Address
+        {
+            Street = address?.Street,
+            City = address?.City,
+            State = address?.State,
+            PostalCode = address?.PostalCode,
+            Country = address?.Country,
+            IsDeleted = false
+        },
+        PhoneNumber = phoneNumber,
+        Role =  role ??"user", 
+        CreatedAt = DateTime.UtcNow,
+        UpdatedAt = DateTime.UtcNow,
+        IsDeleted = false
+    };
+
+    _context.Users.InsertOne(newUser);
+    return true;
+}
     public void Logout(string email)
     {
         var user = _context.Users.Find(u => u.Email == email).FirstOrDefault();

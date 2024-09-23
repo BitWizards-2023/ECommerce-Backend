@@ -28,18 +28,28 @@ namespace ECommerceBackend.Controllers
             return Ok(new { token, refreshToken });
         }
 
-        [HttpPost("register")]
+     [HttpPost("register")]
         public IActionResult Register([FromBody] RegisterRequest model)
         {
-            var success = _authService.Register(model.Email, model.Password);
+            var success = _authService.Register(
+             model.Email, 
+             model.Password, 
+             model.Username, 
+             model.FirstName, 
+             model.LastName,
+             model.Role, 
+             model.Address, 
+             model.PhoneNumber
+             );
 
-            if (!success)
-            {
-                return BadRequest(new { message = "Email is already taken" });
-            }
-
-            return Ok(new { message = "Registration successful" });
+        if (!success)
+        {
+            return BadRequest(new { message = "Email or Username is already taken" });
         }
+
+        return Ok(new { message = "Registration successful" });
+        }
+
 
         [HttpPost("refresh-token")]
         public IActionResult RefreshToken([FromBody] RefreshTokenRequest model)

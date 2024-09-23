@@ -6,7 +6,7 @@ namespace ECommerceBackend.Services
         string Authenticate(string email, string password, out string refreshToken);
 
         // Registers a new user
-        bool Register(string email, string password);
+        bool Register(string email, string password, string username,string role, string firstName, string lastName, AddressRequest address, string phoneNumber);
 
         // Generates a new JWT using a valid refresh token
         string RefreshToken(string token, string refreshToken);
