@@ -60,5 +60,26 @@ namespace ECommerceBackend.Controllers
         _authService.Logout(model.Email);
         return Ok(new { message = "Logged out successfully" });
         }        
-    }
+
+          [HttpPost("request-password-reset")]
+         public IActionResult RequestPasswordReset([FromBody] RequestPasswordResetRequest model)
+        {
+        var resetToken = _authService.RequestPasswordReset(model.Email);
+        return Ok(new { message = "Password reset token generated successfully", resetToken });
+        }
+
+          [HttpPost("reset-password")]
+        public IActionResult ResetPassword([FromBody] ResetPasswordRequest model)
+        {
+        var success = _authService.ResetPassword(model.Email, model.ResetToken, model.NewPassword);
+
+        if (!success)
+        {
+            return BadRequest(new { message = "Invalid or expired password reset token" });
+        }
+
+        return Ok(new { message = "Password reset successfully" });
+        }
+
+    }    
 }

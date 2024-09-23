@@ -47,6 +47,13 @@ namespace ECommerceBackend.Models
 
         [BsonElement("RefreshTokenExpiryTime")]
         public DateTime RefreshTokenExpiryTime { get; set; }
+
+        // Fields for password reset functionality
+    [BsonElement("PasswordResetToken")]
+    public string PasswordResetToken { get; set; }
+
+    [BsonElement("ResetTokenExpiryTime")]
+    public DateTime ResetTokenExpiryTime { get; set; }
     }
 
     public class Address

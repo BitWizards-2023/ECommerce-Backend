@@ -131,7 +131,7 @@ public class AuthService : IAuthService
         _context.Users.InsertOne(newUser);
         return true;
     }
-       public void Logout(string email)
+    public void Logout(string email)
     {
         var user = _context.Users.Find(u => u.Email == email).FirstOrDefault();
 
@@ -142,6 +142,52 @@ public class AuthService : IAuthService
             _context.Users.ReplaceOne(u => u.Id == user.Id, user);
         }
     }
+    public string RequestPasswordReset(string email)
+    {
+        var user = _context.Users.Find(u => u.Email == email).FirstOrDefault();
+
+        if (user == null)
+        {
+            throw new ArgumentException("No user found with the provided email.");
+        }
+
+        // Generate a password reset token
+        var resetToken = GenerateResetToken();
+        user.PasswordResetToken = resetToken;
+        user.ResetTokenExpiryTime = DateTime.UtcNow.AddHours(1); // Token valid for 1 hour
+
+        _context.Users.ReplaceOne(u => u.Id == user.Id, user);
+
+        // Ideally, you would send the reset token to the user's email
+        return resetToken;
+    }
+    private string GenerateResetToken()
+    {
+        var randomNumber = new byte[32];
+        using (var rng = RandomNumberGenerator.Create())
+        {
+            rng.GetBytes(randomNumber);
+            return Convert.ToBase64String(randomNumber);
+        }
+    }
+    public bool ResetPassword(string email, string resetToken, string newPassword)
+    {
+        var user = _context.Users.Find(u => u.Email == email && u.PasswordResetToken == resetToken).FirstOrDefault();
+
+        if (user == null || user.ResetTokenExpiryTime <= DateTime.UtcNow)
+        {
+            return false; // Invalid token or token expired
+        }
+
+        // Update the user's password
+        user.PasswordHash = PasswordHasher.HashPassword(newPassword);
+        user.PasswordResetToken = null; // Clear the reset token
+        user.ResetTokenExpiryTime = DateTime.MinValue; // Reset expiry time
+
+        _context.Users.ReplaceOne(u => u.Id == user.Id, user);
+        return true;
+    }
+
 }
 
 }

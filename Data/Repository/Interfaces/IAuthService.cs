@@ -13,5 +13,11 @@ namespace ECommerceBackend.Services
 
         // Logs out a user by invalidating their refresh token
         void Logout(string email);
+
+         // Requests a password reset
+        string RequestPasswordReset(string email);
+
+        // Resets the password using the provided reset token
+        bool ResetPassword(string email, string resetToken, string newPassword);
     }
 }
