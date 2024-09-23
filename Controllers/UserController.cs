@@ -11,10 +11,6 @@ namespace ECommerceBackend.Controllers
     {
         private readonly IUserServices _userService;
 
-        public UserController(IUserServices userService)
-        {
-            _userService = userService;
-        }
 
         [HttpGet("list")]
         public IActionResult GetUsers()
