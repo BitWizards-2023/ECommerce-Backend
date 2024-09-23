@@ -22,7 +22,7 @@ namespace ECommerceBackend.Controllers
 
             if (token == null)
             {
-                return Unauthorized(new { message = "Email or password is incorrect" });
+                return Unauthorized(new { message = "Invalid email or password." });
             }
 
             return Ok(new { token, refreshToken });

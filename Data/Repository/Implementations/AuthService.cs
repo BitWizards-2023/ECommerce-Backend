@@ -24,15 +24,19 @@ public class AuthService : IAuthService
 
     public string Authenticate(string Email, string password, out string refreshToken)
     {
-        if (string.IsNullOrWhiteSpace(Email) || string.IsNullOrWhiteSpace(password))
-            throw new ArgumentException("Email and password must be provided.");
+         refreshToken = null; // Initialize refreshToken to null
 
-        var user = _context.Users.Find(u => u.Email == Email).FirstOrDefault();
+    if (string.IsNullOrWhiteSpace(Email) || string.IsNullOrWhiteSpace(password))
+        return null; // Email and password are required
 
-        if (user == null || !PasswordHasher.VerifyPassword(user.PasswordHash, password))
-        {
-            throw new UnauthorizedAccessException("Invalid username or password.");
-        }
+    // Retrieve the user from the database
+    var user = _context.Users.Find(u => u.Email == Email).FirstOrDefault();
+
+    // Check if the user exists and if the password is valid
+    if (user == null || !PasswordHasher.VerifyPassword(user.PasswordHash, password))
+    {
+        return null; // Invalid email or password
+    }
 
         var jwtToken = GenerateJwtToken(user);
         refreshToken = GenerateRefreshToken();
@@ -54,12 +58,12 @@ public class AuthService : IAuthService
         if (string.IsNullOrEmpty(secret) || string.IsNullOrEmpty(issuer) ||
             string.IsNullOrEmpty(audience) || string.IsNullOrEmpty(tokenLifetimeStr))
         {
-            throw new Exception("JWT settings are not properly configured.");
+            throw new ArgumentException("JWT settings are not properly configured.");
         }
 
         if (!TimeSpan.TryParse(tokenLifetimeStr, out var tokenLifetime))
         {
-            throw new Exception("Invalid TokenLifetime format in JWT settings.");
+            throw new ArgumentException("Invalid TokenLifetime format in JWT settings.");
         }
 
         var tokenHandler = new JwtSecurityTokenHandler();
