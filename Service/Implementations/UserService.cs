@@ -1,6 +1,10 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using ECommerceBackend.Data.Contexts;
 using ECommerceBackend.Data.Repository.Interfaces;
+using ECommerceBackend.DTOs.Response;
+using ECommerceBackend.Helpers;
 using ECommerceBackend.Models;
 using MongoDB.Driver;
 
@@ -17,8 +21,9 @@ public class UserService : IUserServices
         _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
     }
 
-    public List<User> GetUserList()
+    public List<UserResponseDTO> GetUserList()
     {
-        return _context.Users.Find(u => !u.IsDeleted).ToList();
+        var users = _context.Users.Find(FilterDefinition<User>.Empty).ToList();
+        return users.Select(DtoMapper.ToUserResponseDTO).ToList();
     }
 }
