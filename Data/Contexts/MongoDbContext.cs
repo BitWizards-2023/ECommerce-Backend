@@ -1,33 +1,35 @@
+using ECommerceBackend.Models;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
-using ECommerceBackend.Models;
 
 namespace ECommerceBackend.Data.Contexts
 {
     public class MongoDbContext
-{
-    private readonly IMongoDatabase _database;
-    private readonly ILogger<MongoDbContext> _logger;
-
-    public MongoDbContext(IOptions<DatabaseSettings> dbSettings, ILogger<MongoDbContext> logger)
     {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        private readonly IMongoDatabase _database;
+        private readonly ILogger<MongoDbContext> _logger;
 
-        try
+        public MongoDbContext(IOptions<DatabaseSettings> dbSettings, ILogger<MongoDbContext> logger)
         {
-            var client = new MongoClient(dbSettings.Value.ConnectionString.ToString());
-            _database = client.GetDatabase(dbSettings.Value.DatabaseName);
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-            _logger.LogInformation("Successfully connected to MongoDB Atlas database: {DatabaseName}", dbSettings.Value.DatabaseName);
+            try
+            {
+                var client = new MongoClient(dbSettings.Value.ConnectionString.ToString());
+                _database = client.GetDatabase(dbSettings.Value.DatabaseName);
+
+                _logger.LogInformation(
+                    "Successfully connected to MongoDB Atlas database: {DatabaseName}",
+                    dbSettings.Value.DatabaseName
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "An error occurred while connecting to MongoDB Atlas.");
+                throw;
+            }
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "An error occurred while connecting to MongoDB Atlas.");
-            throw;
-        }
+
+        public IMongoCollection<User> Users => _database.GetCollection<User>("Users");
     }
-
-    public IMongoCollection<User> Users => _database.GetCollection<User>("Users");
-}
-
 }

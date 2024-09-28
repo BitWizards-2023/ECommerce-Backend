@@ -7,73 +7,72 @@ namespace ECommerceBackend.Models
     {
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
-        public string Id { get; set; }
+        public string Id { get; set; } = string.Empty;
 
         [BsonElement("Username")]
-        public string Username { get; set; }
+        public string Username { get; set; } = string.Empty;
 
         [BsonElement("PasswordHash")]
-        public string PasswordHash { get; set; }
+        public string PasswordHash { get; set; } = string.Empty;
 
         [BsonElement("Email")]
-        public string Email { get; set; }
+        public string Email { get; set; } = string.Empty;
 
         [BsonElement("Role")]
-        public string Role { get; set; } 
+        public string Role { get; set; } = string.Empty;
 
         [BsonElement("FirstName")]
-        public string FirstName { get; set; }
+        public string FirstName { get; set; } = string.Empty;
 
         [BsonElement("LastName")]
-        public string LastName { get; set; }
+        public string LastName { get; set; } = string.Empty;
 
         [BsonElement("Address")]
-        public Address Address { get; set; }
+        public Address Address { get; set; } = new Address();
 
         [BsonElement("PhoneNumber")]
-        public string PhoneNumber { get; set; }
+        public string PhoneNumber { get; set; } = string.Empty;
 
         [BsonElement("CreatedAt")]
-        public DateTime CreatedAt { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         [BsonElement("UpdatedAt")]
-        public DateTime UpdatedAt { get; set; }
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
         [BsonElement("IsDeleted")]
         public bool IsDeleted { get; set; } = false;
 
         [BsonElement("RefreshToken")]
-        public string RefreshToken { get; set; }
+        public string RefreshToken { get; set; } = string.Empty;
 
         [BsonElement("RefreshTokenExpiryTime")]
-        public DateTime RefreshTokenExpiryTime { get; set; }
+        public DateTime RefreshTokenExpiryTime { get; set; } = DateTime.UtcNow;
 
-        // Fields for password reset functionality
-    [BsonElement("PasswordResetToken")]
-    public string PasswordResetToken { get; set; }
+        [BsonElement("PasswordResetToken")]
+        public string PasswordResetToken { get; set; } = string.Empty;
 
-    [BsonElement("ResetTokenExpiryTime")]
-    public DateTime ResetTokenExpiryTime { get; set; }
+        [BsonElement("ResetTokenExpiryTime")]
+        public DateTime ResetTokenExpiryTime { get; set; } = DateTime.UtcNow;
     }
 
     public class Address
     {
         [BsonElement("Street")]
-        public string Street { get; set; }
+        public string Street { get; set; } = string.Empty;
 
         [BsonElement("City")]
-        public string City { get; set; }
+        public string City { get; set; } = string.Empty;
 
         [BsonElement("State")]
-        public string State { get; set; }
+        public string State { get; set; } = string.Empty;
 
         [BsonElement("PostalCode")]
-        public string PostalCode { get; set; }
+        public string PostalCode { get; set; } = string.Empty;
 
         [BsonElement("Country")]
-        public string Country { get; set; }
+        public string Country { get; set; } = string.Empty;
 
         [BsonElement("IsDeleted")]
-        public bool IsDeleted { get; set; } 
+        public bool IsDeleted { get; set; } = false;
     }
 }

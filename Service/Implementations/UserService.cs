@@ -6,9 +6,8 @@ using MongoDB.Driver;
 
 namespace ECommerceBackend.Data.Repository.Implementations;
 
-public class UserService:IUserServices 
+public class UserService : IUserServices
 {
-    
     private readonly MongoDbContext _context;
     private readonly IConfiguration _configuration;
 
@@ -17,8 +16,9 @@ public class UserService:IUserServices
         _context = context ?? throw new ArgumentNullException(nameof(context));
         _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
     }
-      public List<User> GetUserList()
-        {
-            return _context.Users.Find(u => !u.IsDeleted).ToList();
-        }
+
+    public List<User> GetUserList()
+    {
+        return _context.Users.Find(u => !u.IsDeleted).ToList();
+    }
 }
