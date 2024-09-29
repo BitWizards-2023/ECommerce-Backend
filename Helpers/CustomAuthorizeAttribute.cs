@@ -19,10 +19,14 @@ namespace ECommerceBackend.Helpers
         {
             var user = context.HttpContext.User;
 
+            Console.WriteLine(user);
+
             // Check if the user is authenticated
             if (!user.Identity.IsAuthenticated)
             {
-                context.Result = new UnauthorizedObjectResult(new { message = "You are not authenticated. Please log in." });
+                context.Result = new UnauthorizedObjectResult(
+                    new { message = "You are not authenticated. Please log in." }
+                );
                 return;
             }
 

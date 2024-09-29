@@ -3,7 +3,7 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
 
-namespace ECommerceBackend.Helpers; // Replace with your project's namespace
+namespace ECommerceBackend.Helpers;
 
 public class JwtSecurityTokenHandlerWrapper
 {
@@ -23,10 +23,10 @@ public class JwtSecurityTokenHandlerWrapper
 
         // Create claims for user identity and role
         var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.NameIdentifier, userId),
-                new Claim(ClaimTypes.Role, role)
-            };
+        {
+            new Claim(ClaimTypes.NameIdentifier, userId),
+            new Claim(ClaimTypes.Role, role),
+        };
 
         // Create an identity from the claims
         var identity = new ClaimsIdentity(claims);
@@ -38,7 +38,10 @@ public class JwtSecurityTokenHandlerWrapper
             Audience = Environment.GetEnvironmentVariable("JWT_AUDIENCE"),
             Subject = identity,
             Expires = DateTime.UtcNow.AddMinutes(30),
-            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            SigningCredentials = new SigningCredentials(
+                new SymmetricSecurityKey(key),
+                SecurityAlgorithms.HmacSha256Signature
+            ),
         };
 
         // Create a JWT security token
@@ -58,19 +61,22 @@ public class JwtSecurityTokenHandlerWrapper
         {
             // Create a token handler and validate the token
             var tokenHandler = new JwtSecurityTokenHandler();
-            var claimsPrincipal = tokenHandler.ValidateToken(token, new TokenValidationParameters
-            {
-                ValidateIssuerSigningKey = true,
-                ValidIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER"),
-                ValidAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE"),
-                IssuerSigningKey = new SymmetricSecurityKey(key)
-            }, out SecurityToken validatedToken);
+            var claimsPrincipal = tokenHandler.ValidateToken(
+                token,
+                new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER"),
+                    ValidAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE"),
+                    IssuerSigningKey = new SymmetricSecurityKey(key),
+                },
+                out SecurityToken validatedToken
+            );
 
             return claimsPrincipal;
         }
         catch (SecurityTokenExpiredException)
         {
-
             throw new ApplicationException("Token has expired.");
         }
     }

@@ -67,7 +67,9 @@ namespace ECommerceBackend.Services
             var issuer = _configuration["JwtSettings:Issuer"];
             var audience = _configuration["JwtSettings:Audience"];
             var tokenLifetimeStr = _configuration["JwtSettings:TokenLifetime"];
-
+            Console.WriteLine($"Secret: {secret}");
+            Console.WriteLine($"Issuer: {issuer}");
+            Console.WriteLine($"Audience: {audience}");
             if (
                 string.IsNullOrEmpty(secret)
                 || string.IsNullOrEmpty(issuer)
@@ -84,20 +86,26 @@ namespace ECommerceBackend.Services
             }
 
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(secret);
+            var key = Encoding.UTF8.GetBytes(secret);
+            var now = DateTime.UtcNow;
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(
                     new[]
                     {
+                        new Claim(ClaimTypes.NameIdentifier, user.Id),
                         new Claim(ClaimTypes.Email, user.Email),
-                        new Claim(ClaimTypes.Role, user.Role ?? "User"),
+                        new Claim(ClaimTypes.Role, user.Role),
+                        new Claim(JwtRegisteredClaimNames.Aud, audience),
+                        new Claim(JwtRegisteredClaimNames.Iss, issuer),
                     }
                 ),
-                Expires = DateTime.UtcNow.Add(tokenLifetime),
-                Issuer = issuer,
-                Audience = audience,
+                NotBefore = now,
+                IssuedAt = now,
+                Expires = now.Add(tokenLifetime),
+                //Issuer = issuer,
+                //Audience = audience,
                 SigningCredentials = new SigningCredentials(
                     new SymmetricSecurityKey(key),
                     SecurityAlgorithms.HmacSha256Signature
@@ -105,7 +113,11 @@ namespace ECommerceBackend.Services
             };
 
             var token = tokenHandler.CreateToken(tokenDescriptor);
-            return tokenHandler.WriteToken(token);
+            Console.WriteLine($"Token: {token}");
+
+            var encodedToken = tokenHandler.WriteToken(token);
+            Console.WriteLine($"encodedToken: {encodedToken}");
+            return encodedToken;
         }
 
         // Generates a secure refresh token
@@ -178,7 +190,7 @@ namespace ECommerceBackend.Services
                     IsDeleted = false,
                 },
                 PhoneNumber = phoneNumber,
-                Role = role ?? "user",
+                Role = role ?? "User",
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
                 IsDeleted = false,

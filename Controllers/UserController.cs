@@ -1,13 +1,14 @@
 using ECommerceBackend.Data.Repository.Interfaces;
 using ECommerceBackend.DTOs.Response;
+using ECommerceBackend.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ECommerceBackend.Controllers
 {
+    [Authorize(Policy = "AdminPolicy")]
     [Route("api/v1/[controller]")]
     [ApiController]
-    [Authorize(Policy = "AdminPolicy")]
     public class UserController : ControllerBase
     {
         private readonly IUserServices _userService;

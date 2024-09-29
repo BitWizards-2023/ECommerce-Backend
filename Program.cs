@@ -1,3 +1,11 @@
+/*
+ * File: Program.cs
+ * Description: Configures and initializes the ECommerce Backend API application.
+ * Author: Sudesh Sachintha Bandara
+ * Date: 2024/09/29
+ */
+
+using System.Security.Claims;
 using System.Text;
 using ECommerceBackend.Data.Contexts;
 using ECommerceBackend.Data.Repository.Implementations;
@@ -11,23 +19,33 @@ using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Logging configuration
+// Clears existing logging providers and adds console logging with Debug level
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.SetMinimumLevel(LogLevel.Debug);
 
+// Database settings configuration
+// Configures database settings from appsettings.json and registers MongoDbContext as a singleton
 builder.Services.Configure<DatabaseSettings>(
     builder.Configuration.GetSection(nameof(DatabaseSettings))
 );
 builder.Services.AddSingleton<MongoDbContext>();
 
+// Register services
+// Adds scoped services for authentication and user management
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserServices, UserService>();
 
+// Add controllers
+// Registers MVC controllers for handling HTTP requests
 builder.Services.AddControllers();
 
+// Swagger configuration for API documentation
+// Sets up Swagger with JWT authentication support
 builder.Services.AddSwaggerGen(option =>
 {
-    option.SwaggerDoc("v1", new OpenApiInfo { Title = "Demo API", Version = "v1" });
+    option.SwaggerDoc("v1", new OpenApiInfo { Title = "ECommerce Backend API", Version = "v1" });
     option.AddSecurityDefinition(
         "Bearer",
         new OpenApiSecurityScheme
@@ -58,26 +76,37 @@ builder.Services.AddSwaggerGen(option =>
     );
 });
 
+// Configure JWT settings
+// Retrieves and validates JWT settings from configuration
 var jwtSettingsSection = builder.Configuration.GetSection(nameof(JwtSettings));
 builder.Services.Configure<JwtSettings>(jwtSettingsSection);
 
 var jwtSettings = jwtSettingsSection.Get<JwtSettings>();
-if (jwtSettings == null)
-{
-    throw new Exception("JWT settings are not configured properly in appsettings.json.");
-}
-
 if (
-    string.IsNullOrEmpty(jwtSettings.Secret)
+    jwtSettings == null
+    || string.IsNullOrEmpty(jwtSettings.Secret)
     || string.IsNullOrEmpty(jwtSettings.Issuer)
     || string.IsNullOrEmpty(jwtSettings.Audience)
 )
 {
-    throw new Exception("JWT settings are missing required properties.");
+    throw new Exception("JWT settings are not configured properly in appsettings.json.");
 }
 
-var key = Encoding.ASCII.GetBytes(jwtSettings.Secret);
+// Retrieve JWT parameters from configuration
+var secret = builder.Configuration["JwtSettings:Secret"];
+var key = Encoding.UTF8.GetBytes(secret);
+var issuer = builder.Configuration["JwtSettings:Issuer"];
+var audience = builder.Configuration["JwtSettings:Audience"];
 
+// Print the JWT key and related settings to the console for debugging
+Console.WriteLine($"JWT Secret Key: {jwtSettings.Secret}");
+Console.WriteLine($"Key: {jwtSettings.Secret}");
+Console.WriteLine($"Secret: {secret}");
+Console.WriteLine($"Issuer: {issuer}");
+Console.WriteLine($"Audience: {audience}");
+
+// JWT Authentication configuration
+// Sets up JWT Bearer authentication with token validation parameters
 builder
     .Services.AddAuthentication(options =>
     {
@@ -87,19 +116,23 @@ builder
     .AddJwtBearer(options =>
     {
         options.RequireHttpsMetadata = false;
+        options.UseSecurityTokenValidators = true;
         options.SaveToken = true;
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuerSigningKey = true,
+            ValidateIssuer = false,
+            ValidateAudience = false,
+            ValidateLifetime = true,
+            ValidAudience = audience,
+            ValidIssuer = issuer,
             IssuerSigningKey = new SymmetricSecurityKey(key),
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidIssuer = jwtSettings.Issuer,
-            ValidAudience = jwtSettings.Audience,
-            ClockSkew = TimeSpan.Zero,
+            ClockSkew = TimeSpan.FromMinutes(5),
         };
     });
 
+// Authorization policies
+// Defines default and custom authorization policies for the application
 builder.Services.AddAuthorization(options =>
 {
     options.DefaultPolicy = new AuthorizationPolicyBuilder()
@@ -108,8 +141,11 @@ builder.Services.AddAuthorization(options =>
         .Build();
 
     options.AddPolicy("AdminPolicy", policy => policy.RequireRole("Admin"));
+    options.AddPolicy("UserPolicy", policy => policy.RequireRole("User"));
 });
 
+// Register CORS policy
+// Configures Cross-Origin Resource Sharing to allow any origin, method, and header
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(
@@ -118,27 +154,35 @@ builder.Services.AddCors(options =>
     );
 });
 
+// Health Checks
+// Adds health check services to monitor the application's health
 builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
+// Use HTTPS Redirection
+// Redirects HTTP requests to HTTPS
 app.UseHttpsRedirection();
-app.UseCors("CorsPolicy");
-app.UseAuthentication();
-app.UseAuthorization();
 
+// Use CORS
+// Applies the configured CORS policy to incoming requests
+app.UseCors("CorsPolicy");
+
+// Swagger integration in Development mode
+// Enables Swagger UI only in the Development environment
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-app.UseSwaggerUI(c =>
-{
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "ECommerce Backend API V1");
-    c.RoutePrefix = string.Empty;
-});
+// Use Authentication and Authorization
+// Enables authentication and authorization middleware
+app.UseAuthentication();
+app.UseAuthorization();
 
+// Map Controllers and Health Check endpoints
+// Maps controller routes and the health check endpoint
 app.MapControllers();
 app.MapHealthChecks("/health");
 
