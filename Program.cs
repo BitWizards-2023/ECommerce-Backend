@@ -11,6 +11,8 @@ using ECommerceBackend.Data.Contexts;
 using ECommerceBackend.Data.Repository.Implementations;
 using ECommerceBackend.Data.Repository.Interfaces;
 using ECommerceBackend.Models;
+using ECommerceBackend.Service.Implementations;
+using ECommerceBackend.Service.Interfaces;
 using ECommerceBackend.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -36,6 +38,7 @@ builder.Services.AddSingleton<MongoDbContext>();
 // Adds scoped services for authentication and user management
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserServices, UserService>();
+builder.Services.AddScoped<IBloblService, BlobService>();
 
 // Add controllers
 // Registers MVC controllers for handling HTTP requests
