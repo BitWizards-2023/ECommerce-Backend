@@ -1,118 +1,192 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
+/*
+ * File: Program.cs
+ * Description: Configures and initializes the ECommerce Backend API application.
+ * Author: Sudesh Sachintha Bandara
+ * Date: 2024/09/29
+ */
+
+using System.Security.Claims;
 using System.Text;
-using ECommerceBackend.Models;
 using ECommerceBackend.Data.Contexts;
+using ECommerceBackend.Data.Repository.Implementations;
+using ECommerceBackend.Data.Repository.Interfaces;
+using ECommerceBackend.Models;
+using ECommerceBackend.Service.Implementations;
+using ECommerceBackend.Service.Interfaces;
+using ECommerceBackend.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configure logging
+// Logging configuration
+// Clears existing logging providers and adds console logging with Debug level
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
-builder.Logging.SetMinimumLevel(LogLevel.Debug); // Set to Debug for detailed logs
-builder.Services.AddControllers();
+builder.Logging.SetMinimumLevel(LogLevel.Debug);
 
-// Add services to the container.
-
-// Add controllers
-builder.Services.AddControllers();
-
-// Configure DatabaseSettings
-builder.Services.Configure<DatabaseSettings>(builder.Configuration.GetSection(nameof(DatabaseSettings)));
-
-// **Check DatabaseSettings here**
-var databaseSettingsSection = builder.Configuration.GetSection(nameof(DatabaseSettings));
-var databaseSettings = databaseSettingsSection.Get<DatabaseSettings>();
-
-if (databaseSettings == null)
-{
-    throw new Exception("Database settings are not configured properly in appsettings.json.");
-}
-
-if (string.IsNullOrEmpty(databaseSettings.ConnectionString) ||
-    string.IsNullOrEmpty(databaseSettings.DatabaseName))
-{
-    throw new Exception("Database settings are missing required properties.");
-}
-
-// Register MongoDbContext
+// Database settings configuration
+// Configures database settings from appsettings.json and registers MongoDbContext as a singleton
+builder.Services.Configure<DatabaseSettings>(
+    builder.Configuration.GetSection(nameof(DatabaseSettings))
+);
 builder.Services.AddSingleton<MongoDbContext>();
 
-// Configure JwtSettings
+// Register services
+// Adds scoped services for authentication and user management
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IUserServices, UserService>();
+builder.Services.AddScoped<IBloblService, BlobService>();
+
+// Add controllers
+// Registers MVC controllers for handling HTTP requests
+builder.Services.AddControllers();
+
+// Swagger configuration for API documentation
+// Sets up Swagger with JWT authentication support
+builder.Services.AddSwaggerGen(option =>
+{
+    option.SwaggerDoc("v1", new OpenApiInfo { Title = "ECommerce Backend API", Version = "v1" });
+    option.AddSecurityDefinition(
+        "Bearer",
+        new OpenApiSecurityScheme
+        {
+            In = ParameterLocation.Header,
+            Description = "Please enter a valid token",
+            Name = "Authorization",
+            Type = SecuritySchemeType.Http,
+            BearerFormat = "JWT",
+            Scheme = "Bearer",
+        }
+    );
+    option.AddSecurityRequirement(
+        new OpenApiSecurityRequirement
+        {
+            {
+                new OpenApiSecurityScheme
+                {
+                    Reference = new OpenApiReference
+                    {
+                        Type = ReferenceType.SecurityScheme,
+                        Id = "Bearer",
+                    },
+                },
+                new string[] { }
+            },
+        }
+    );
+});
+
+// Configure JWT settings
+// Retrieves and validates JWT settings from configuration
 var jwtSettingsSection = builder.Configuration.GetSection(nameof(JwtSettings));
 builder.Services.Configure<JwtSettings>(jwtSettingsSection);
 
-// **Check JwtSettings here**
 var jwtSettings = jwtSettingsSection.Get<JwtSettings>();
-
-if (jwtSettings == null)
+if (
+    jwtSettings == null
+    || string.IsNullOrEmpty(jwtSettings.Secret)
+    || string.IsNullOrEmpty(jwtSettings.Issuer)
+    || string.IsNullOrEmpty(jwtSettings.Audience)
+)
 {
     throw new Exception("JWT settings are not configured properly in appsettings.json.");
 }
 
-if (string.IsNullOrEmpty(jwtSettings.Secret) ||
-    string.IsNullOrEmpty(jwtSettings.Issuer) ||
-    string.IsNullOrEmpty(jwtSettings.Audience))
-{
-    throw new Exception("JWT settings are missing required properties.");
-}
+// Retrieve JWT parameters from configuration
+var secret = builder.Configuration["JwtSettings:Secret"];
+var key = Encoding.UTF8.GetBytes(secret);
+var issuer = builder.Configuration["JwtSettings:Issuer"];
+var audience = builder.Configuration["JwtSettings:Audience"];
 
-var key = Encoding.ASCII.GetBytes(jwtSettings.Secret);
+// Print the JWT key and related settings to the console for debugging
+Console.WriteLine($"JWT Secret Key: {jwtSettings.Secret}");
+Console.WriteLine($"Key: {jwtSettings.Secret}");
+Console.WriteLine($"Secret: {secret}");
+Console.WriteLine($"Issuer: {issuer}");
+Console.WriteLine($"Audience: {audience}");
 
-// Configure JWT authentication
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
-    options.RequireHttpsMetadata = false;
-    options.SaveToken = true;
-    options.TokenValidationParameters = new TokenValidationParameters
+// JWT Authentication configuration
+// Sets up JWT Bearer authentication with token validation parameters
+builder
+    .Services.AddAuthentication(options =>
     {
-        ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(key),
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidIssuer = jwtSettings.Issuer,
-        ValidAudience = jwtSettings.Audience,
-        ClockSkew = TimeSpan.Zero
-    };
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(options =>
+    {
+        options.RequireHttpsMetadata = false;
+        options.UseSecurityTokenValidators = true;
+        options.SaveToken = true;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            ValidateIssuer = false,
+            ValidateAudience = false,
+            ValidateLifetime = true,
+            ValidAudience = audience,
+            ValidIssuer = issuer,
+            IssuerSigningKey = new SymmetricSecurityKey(key),
+            ClockSkew = TimeSpan.FromMinutes(5),
+        };
+    });
+
+// Authorization policies
+// Defines default and custom authorization policies for the application
+builder.Services.AddAuthorization(options =>
+{
+    options.DefaultPolicy = new AuthorizationPolicyBuilder()
+        .AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme)
+        .RequireAuthenticatedUser()
+        .Build();
+
+    options.AddPolicy("AdminPolicy", policy => policy.RequireRole("Admin"));
+    options.AddPolicy("UserPolicy", policy => policy.RequireRole("User"));
 });
 
-// Configure CORS
+// Register CORS policy
+// Configures Cross-Origin Resource Sharing to allow any origin, method, and header
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("CorsPolicy", policy => policy
-        .AllowAnyOrigin()
-        .AllowAnyMethod()
-        .AllowAnyHeader());
+    options.AddPolicy(
+        "CorsPolicy",
+        policy => policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()
+    );
 });
 
-// Configure Health Checks
+// Health Checks
+// Adds health check services to monitor the application's health
 builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-
-if (app.Environment.IsDevelopment())
-{
-    app.UseDeveloperExceptionPage();
-}
-
+// Use HTTPS Redirection
+// Redirects HTTP requests to HTTPS
 app.UseHttpsRedirection();
 
+// Use CORS
+// Applies the configured CORS policy to incoming requests
 app.UseCors("CorsPolicy");
 
+// Swagger integration in Development mode
+// Enables Swagger UI only in the Development environment
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+// Use Authentication and Authorization
+// Enables authentication and authorization middleware
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Map Controllers and Health Check endpoints
+// Maps controller routes and the health check endpoint
 app.MapControllers();
-
-
-// Map health check endpoint
 app.MapHealthChecks("/health");
 
 app.Run();
