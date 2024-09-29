@@ -7,35 +7,60 @@ using ECommerceBackend.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configure logging
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
-builder.Logging.SetMinimumLevel(LogLevel.Debug); // Set to Debug for detailed logs
+builder.Logging.SetMinimumLevel(LogLevel.Debug);
 
-// Configure DatabaseSettings
 builder.Services.Configure<DatabaseSettings>(
     builder.Configuration.GetSection(nameof(DatabaseSettings))
 );
 builder.Services.AddSingleton<MongoDbContext>();
 
-// Register the AuthService and other services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserServices, UserService>();
 
-// Add controllers
 builder.Services.AddControllers();
 
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(option =>
+{
+    option.SwaggerDoc("v1", new OpenApiInfo { Title = "Demo API", Version = "v1" });
+    option.AddSecurityDefinition(
+        "Bearer",
+        new OpenApiSecurityScheme
+        {
+            In = ParameterLocation.Header,
+            Description = "Please enter a valid token",
+            Name = "Authorization",
+            Type = SecuritySchemeType.Http,
+            BearerFormat = "JWT",
+            Scheme = "Bearer",
+        }
+    );
+    option.AddSecurityRequirement(
+        new OpenApiSecurityRequirement
+        {
+            {
+                new OpenApiSecurityScheme
+                {
+                    Reference = new OpenApiReference
+                    {
+                        Type = ReferenceType.SecurityScheme,
+                        Id = "Bearer",
+                    },
+                },
+                new string[] { }
+            },
+        }
+    );
+});
 
-// Configure JwtSettings
 var jwtSettingsSection = builder.Configuration.GetSection(nameof(JwtSettings));
 builder.Services.Configure<JwtSettings>(jwtSettingsSection);
 
-// Check JwtSettings here
 var jwtSettings = jwtSettingsSection.Get<JwtSettings>();
 if (jwtSettings == null)
 {
@@ -53,7 +78,6 @@ if (
 
 var key = Encoding.ASCII.GetBytes(jwtSettings.Secret);
 
-// Configure JWT authentication
 builder
     .Services.AddAuthentication(options =>
     {
@@ -76,20 +100,16 @@ builder
         };
     });
 
-// Configure the default authorization policy
 builder.Services.AddAuthorization(options =>
 {
-    // Default policy requires authentication
     options.DefaultPolicy = new AuthorizationPolicyBuilder()
         .AddAuthenticationSchemes(JwtBearerDefaults.AuthenticationScheme)
         .RequireAuthenticatedUser()
         .Build();
 
-    // Define role-based policy for Admin
     options.AddPolicy("AdminPolicy", policy => policy.RequireRole("Admin"));
 });
 
-// Configure CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(
@@ -98,10 +118,14 @@ builder.Services.AddCors(options =>
     );
 });
 
-// Configure Health Checks
 builder.Services.AddHealthChecks();
 
 var app = builder.Build();
+
+app.UseHttpsRedirection();
+app.UseCors("CorsPolicy");
+app.UseAuthentication();
+app.UseAuthorization();
 
 if (app.Environment.IsDevelopment())
 {
@@ -109,10 +133,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
-app.UseCors("CorsPolicy");
-app.UseAuthentication();
-app.UseAuthorization();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "ECommerce Backend API V1");
+    c.RoutePrefix = string.Empty;
+});
 
 app.MapControllers();
 app.MapHealthChecks("/health");

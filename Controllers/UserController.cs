@@ -12,7 +12,6 @@ namespace ECommerceBackend.Controllers
     {
         private readonly IUserServices _userService;
 
-        // Ensure there is only one constructor
         public UserController(IUserServices userService)
         {
             _userService = userService ?? throw new ArgumentNullException(nameof(userService));

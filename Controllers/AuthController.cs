@@ -1,4 +1,6 @@
+using System.Security.Claims;
 using ECommerceBackend.DTOs.Request;
+using ECommerceBackend.DTOs.Response;
 using ECommerceBackend.Helpers;
 using ECommerceBackend.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -14,7 +16,7 @@ namespace ECommerceBackend.Controllers
 
         public AuthController(IAuthService authService)
         {
-            _authService = authService;
+            _authService = authService ?? throw new ArgumentNullException(nameof(authService));
         }
 
         [HttpPost("login")]
@@ -28,10 +30,14 @@ namespace ECommerceBackend.Controllers
 
             if (token == null)
             {
-                return Unauthorized(new { message = "Invalid email or password." });
+                return Unauthorized(
+                    new ResponseDTO<string>(false, "Invalid email or password", null)
+                );
             }
 
-            return Ok(new { token, refreshToken });
+            return Ok(
+                new ResponseDTO<object>(true, "Login successful", new { token, refreshToken })
+            );
         }
 
         [HttpPost("register")]
@@ -41,19 +47,21 @@ namespace ECommerceBackend.Controllers
                 model.Email,
                 model.Password,
                 model.Username,
+                model.Role,
                 model.FirstName,
                 model.LastName,
-                model.Role,
                 model.Address,
                 model.PhoneNumber
             );
 
             if (!success)
             {
-                return BadRequest(new { message = "Email or Username is already taken" });
+                return BadRequest(
+                    new ResponseDTO<string>(false, "Email or Username is already taken", null)
+                );
             }
 
-            return Ok(new { message = "Registration successful" });
+            return Ok(new ResponseDTO<string>(true, "Registration successful", null));
         }
 
         [HttpPost("refresh-token")]
@@ -63,24 +71,36 @@ namespace ECommerceBackend.Controllers
 
             if (newJwtToken == null)
             {
-                return Unauthorized(new { message = "Invalid refresh token" });
+                return Unauthorized(new ResponseDTO<string>(false, "Invalid refresh token", null));
             }
 
-            return Ok(new { token = newJwtToken });
+            return Ok(
+                new ResponseDTO<object>(
+                    true,
+                    "Token refreshed successfully",
+                    new { token = newJwtToken }
+                )
+            );
         }
 
         [HttpPost("logout")]
         public IActionResult Logout([FromBody] LogoutRequest model)
         {
             _authService.Logout(model.Email);
-            return Ok(new { message = "Logged out successfully" });
+            return Ok(new ResponseDTO<string>(true, "Logged out successfully", null));
         }
 
         [HttpPost("request-password-reset")]
         public IActionResult RequestPasswordReset([FromBody] RequestPasswordResetRequest model)
         {
             var resetToken = _authService.RequestPasswordReset(model.Email);
-            return Ok(new { message = "Password reset token generated successfully", resetToken });
+            return Ok(
+                new ResponseDTO<object>(
+                    true,
+                    "Password reset token generated successfully",
+                    new { resetToken }
+                )
+            );
         }
 
         [HttpPost("reset-password")]
@@ -94,10 +114,47 @@ namespace ECommerceBackend.Controllers
 
             if (!success)
             {
-                return BadRequest(new { message = "Invalid or expired password reset token" });
+                return BadRequest(
+                    new ResponseDTO<string>(false, "Invalid or expired password reset token", null)
+                );
             }
 
-            return Ok(new { message = "Password reset successfully" });
+            return Ok(new ResponseDTO<string>(true, "Password reset successfully", null));
+        }
+
+        [HttpGet("me")]
+        [Authorize]
+        public IActionResult GetCurrentUser()
+        {
+            try
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized(
+                        new ResponseDTO<string>(false, "User ID is missing from the token", null)
+                    );
+                }
+
+                var user = _authService.GetCurrentUser(userId);
+
+                if (user == null)
+                {
+                    return NotFound(new ResponseDTO<string>(false, "User not found", null));
+                }
+
+                return Ok(
+                    new ResponseDTO<UserResponseDTO>(true, "User retrieved successfully", user)
+                );
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(
+                    500,
+                    new ResponseDTO<string>(false, $"An error occurred: {ex.Message}", null)
+                );
+            }
         }
     }
 }

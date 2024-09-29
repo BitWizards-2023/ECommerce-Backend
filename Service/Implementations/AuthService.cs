@@ -1,7 +1,17 @@
+/*
+ * Author: Sudesh Sachintha Bandara
+ * Description: This file contains the implementation of the AuthService class, which provides
+ * authentication and user management functionality for the ECommerceBackend application.
+ * This includes methods for user registration, login, token generation, password reset,
+ * and retrieving user details.
+ * Date Created: 2024/09/18
+ */
+
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using ECommerceBackend.Data.Contexts;
+using ECommerceBackend.DTOs.Response;
 using ECommerceBackend.Models;
 using ECommerceBackend.Utilities;
 using Microsoft.IdentityModel.Tokens;
@@ -10,12 +20,14 @@ using MongoDB.Driver;
 namespace ECommerceBackend.Services
 {
     using System.Security.Cryptography;
+    using ECommerceBackend.DTOs.Response;
 
     public class AuthService : IAuthService
     {
         private readonly MongoDbContext _context;
         private readonly IConfiguration _configuration;
 
+        // Constructor for the AuthService class, initializes the database context and configuration
         public AuthService(MongoDbContext context, IConfiguration configuration)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
@@ -23,32 +35,32 @@ namespace ECommerceBackend.Services
                 configuration ?? throw new ArgumentNullException(nameof(configuration));
         }
 
+        // Authenticates a user based on their email and password, returns a JWT token if successful
         public string Authenticate(string Email, string password, out string refreshToken)
         {
-            refreshToken = null; // Initialize refreshToken to null
+            refreshToken = null;
 
             if (string.IsNullOrWhiteSpace(Email) || string.IsNullOrWhiteSpace(password))
-                return null; // Email and password are required
+                return null;
 
-            // Retrieve the user from the database
             var user = _context.Users.Find(u => u.Email == Email).FirstOrDefault();
 
-            // Check if the user exists and if the password is valid
             if (user == null || !PasswordHasher.VerifyPassword(user.PasswordHash, password))
             {
-                return null; // Invalid email or password
+                return null;
             }
 
             var jwtToken = GenerateJwtToken(user);
             refreshToken = GenerateRefreshToken();
 
             user.RefreshToken = refreshToken;
-            user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7); // Set refresh token expiry time, e.g., 7 days
+            user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
             _context.Users.ReplaceOne(u => u.Id == user.Id, user);
 
             return jwtToken;
         }
 
+        // Generates a JWT token for the authenticated user
         private string GenerateJwtToken(User user)
         {
             var secret = _configuration["JwtSettings:Secret"];
@@ -96,6 +108,7 @@ namespace ECommerceBackend.Services
             return tokenHandler.WriteToken(token);
         }
 
+        // Generates a secure refresh token
         private string GenerateRefreshToken()
         {
             var randomNumber = new byte[32];
@@ -106,6 +119,7 @@ namespace ECommerceBackend.Services
             }
         }
 
+        // Refreshes the JWT token using the refresh token
         public string RefreshToken(string token, string refreshToken)
         {
             var user = _context.Users.Find(u => u.RefreshToken == refreshToken).FirstOrDefault();
@@ -117,12 +131,13 @@ namespace ECommerceBackend.Services
             var newRefreshToken = GenerateRefreshToken();
 
             user.RefreshToken = newRefreshToken;
-            user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7); // Set new refresh token expiry time
+            user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
             _context.Users.ReplaceOne(u => u.Id == user.Id, user);
 
             return newJwtToken;
         }
 
+        // Registers a new user in the system
         public bool Register(
             string email,
             string password,
@@ -143,7 +158,7 @@ namespace ECommerceBackend.Services
 
             if (existingUser != null)
             {
-                return false; // Email or Username already taken
+                return false;
             }
 
             var newUser = new User
@@ -173,6 +188,7 @@ namespace ECommerceBackend.Services
             return true;
         }
 
+        // Logs out a user by invalidating the refresh token
         public void Logout(string email)
         {
             var user = _context.Users.Find(u => u.Email == email).FirstOrDefault();
@@ -185,6 +201,7 @@ namespace ECommerceBackend.Services
             }
         }
 
+        // Requests a password reset for the user and returns the reset token
         public string RequestPasswordReset(string email)
         {
             var user = _context.Users.Find(u => u.Email == email).FirstOrDefault();
@@ -194,17 +211,16 @@ namespace ECommerceBackend.Services
                 throw new ArgumentException("No user found with the provided email.");
             }
 
-            // Generate a password reset token
             var resetToken = GenerateResetToken();
             user.PasswordResetToken = resetToken;
-            user.ResetTokenExpiryTime = DateTime.UtcNow.AddHours(1); // Token valid for 1 hour
+            user.ResetTokenExpiryTime = DateTime.UtcNow.AddHours(1);
 
             _context.Users.ReplaceOne(u => u.Id == user.Id, user);
 
-            // Ideally, you would send the reset token to the user's email
             return resetToken;
         }
 
+        // Generates a secure reset token
         private string GenerateResetToken()
         {
             var randomNumber = new byte[32];
@@ -215,6 +231,7 @@ namespace ECommerceBackend.Services
             }
         }
 
+        // Resets the user's password using the reset token
         public bool ResetPassword(string email, string resetToken, string newPassword)
         {
             var user = _context
@@ -223,16 +240,41 @@ namespace ECommerceBackend.Services
 
             if (user == null || user.ResetTokenExpiryTime <= DateTime.UtcNow)
             {
-                return false; // Invalid token or token expired
+                return false;
             }
 
-            // Update the user's password
             user.PasswordHash = PasswordHasher.HashPassword(newPassword);
-            user.PasswordResetToken = null; // Clear the reset token
-            user.ResetTokenExpiryTime = DateTime.MinValue; // Reset expiry time
+            user.PasswordResetToken = null;
+            user.ResetTokenExpiryTime = DateTime.MinValue;
 
             _context.Users.ReplaceOne(u => u.Id == user.Id, user);
             return true;
+        }
+
+        // Retrieves the details of the currently authenticated user
+        public UserResponseDTO GetCurrentUser(string userId)
+        {
+            var user = _context.Users.Find(u => u.Id == userId).FirstOrDefault();
+            if (user == null)
+                return null;
+
+            return new UserResponseDTO
+            {
+                Id = user.Id,
+                Username = user.Username,
+                Email = user.Email,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                PhoneNumber = user.PhoneNumber,
+                Address = new AddressResponseDTO
+                {
+                    Street = user.Address.Street,
+                    City = user.Address.City,
+                    State = user.Address.State,
+                    PostalCode = user.Address.PostalCode,
+                    Country = user.Address.Country,
+                },
+            };
         }
     }
 }
