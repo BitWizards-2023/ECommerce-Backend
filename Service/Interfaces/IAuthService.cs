@@ -1,5 +1,5 @@
-using ECommerceBackend.DTOs.Response;
-using ECommerceBackend.Models;
+using ECommerceBackend.DTOs.Request.Auth;
+using ECommerceBackend.DTOs.Response.Auth;
 
 namespace ECommerceBackend.Services
 {
@@ -7,16 +7,7 @@ namespace ECommerceBackend.Services
     {
         string Authenticate(string email, string password, out string refreshToken);
 
-        bool Register(
-            string email,
-            string password,
-            string username,
-            string role,
-            string firstName,
-            string lastName,
-            AddressRequest address,
-            string phoneNumber
-        );
+        bool Register(RegisterRequest registerRequest);
 
         string RefreshToken(string token, string refreshToken);
 

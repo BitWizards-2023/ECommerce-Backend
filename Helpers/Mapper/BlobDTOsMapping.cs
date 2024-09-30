@@ -6,7 +6,6 @@
  */
 
 
-using ECommerceBackend.DTOs.Request.Upload;
 using ECommerceBackend.DTOs.Response;
 using ECommerceBackend.DTOs.Response.Upload;
 

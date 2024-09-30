@@ -5,7 +5,7 @@
  * Date: 2024/09/29
  */
 
-using System.Security.Claims;
+
 using System.Text;
 using ECommerceBackend.Data.Contexts;
 using ECommerceBackend.Data.Repository.Implementations;
@@ -100,13 +100,6 @@ var secret = builder.Configuration["JwtSettings:Secret"];
 var key = Encoding.UTF8.GetBytes(secret);
 var issuer = builder.Configuration["JwtSettings:Issuer"];
 var audience = builder.Configuration["JwtSettings:Audience"];
-
-// Print the JWT key and related settings to the console for debugging
-Console.WriteLine($"JWT Secret Key: {jwtSettings.Secret}");
-Console.WriteLine($"Key: {jwtSettings.Secret}");
-Console.WriteLine($"Secret: {secret}");
-Console.WriteLine($"Issuer: {issuer}");
-Console.WriteLine($"Audience: {audience}");
 
 // JWT Authentication configuration
 // Sets up JWT Bearer authentication with token validation parameters

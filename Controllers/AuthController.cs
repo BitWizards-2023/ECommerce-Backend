@@ -1,7 +1,6 @@
 using System.Security.Claims;
-using ECommerceBackend.DTOs.Request;
-using ECommerceBackend.DTOs.Response;
-using ECommerceBackend.Helpers;
+using ECommerceBackend.DTOs.Request.Auth;
+using ECommerceBackend.DTOs.Response.Auth;
 using ECommerceBackend.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -43,16 +42,7 @@ namespace ECommerceBackend.Controllers
         [HttpPost("register")]
         public IActionResult Register([FromBody] RegisterRequest model)
         {
-            var success = _authService.Register(
-                model.Email,
-                model.Password,
-                model.Username,
-                model.Role,
-                model.FirstName,
-                model.LastName,
-                model.Address,
-                model.PhoneNumber
-            );
+            var success = _authService.Register(model);
 
             if (!success)
             {
