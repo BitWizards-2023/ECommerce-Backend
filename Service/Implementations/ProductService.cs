@@ -22,13 +22,15 @@ namespace ECommerceBackend.Service.Implementations
                 configuration ?? throw new ArgumentNullException(nameof(configuration));
         }
 
-        public List<ProductResponseDTO> GetProducts()
+        // Method to get products asynchronously
+        public async Task<List<ProductResponseDTO>> GetProductsAsync()
         {
-            var products = _context.Products.Find(p => p.IsActive).ToList();
+            var products = await _context.Products.Find(p => p.IsActive).ToListAsync();
             return products.Select(ProductMapper.ToProductResponseDTO).ToList();
         }
 
-        public List<ProductResponseDTO> SearchProducts(
+        // Method to search products asynchronously
+        public async Task<List<ProductResponseDTO>> SearchProductsAsync(
             string keyword,
             string categoryId,
             string vendorId,
@@ -36,11 +38,9 @@ namespace ECommerceBackend.Service.Implementations
             int pageSize
         )
         {
-            // Building the filter for searching
             var filterBuilder = Builders<Product>.Filter;
             var filter = filterBuilder.Empty;
 
-            // Add keyword filter
             if (!string.IsNullOrWhiteSpace(keyword))
             {
                 var keywordFilter = filterBuilder.Or(
@@ -54,50 +54,53 @@ namespace ECommerceBackend.Service.Implementations
                 filter = filter & keywordFilter;
             }
 
-            // Add categoryId filter (checking if any element in the CategoryIds list matches the given categoryId)
             if (!string.IsNullOrWhiteSpace(categoryId))
             {
                 var categoryFilter = filterBuilder.AnyEq(p => p.CategoryIds, categoryId);
                 filter = filter & categoryFilter;
             }
 
-            // Add vendorId filter
             if (!string.IsNullOrWhiteSpace(vendorId))
             {
                 var vendorFilter = filterBuilder.Eq(p => p.VendorId, vendorId);
                 filter = filter & vendorFilter;
             }
 
-            // Ensure the product is active
             filter = filter & filterBuilder.Eq(p => p.IsActive, true);
 
-            // Retrieve products that match the search criteria with pagination
-            var products = _context
+            var products = await _context
                 .Products.Find(filter)
                 .Skip((pageNumber - 1) * pageSize)
                 .Limit(pageSize)
-                .ToList();
+                .ToListAsync();
 
             return products.Select(ProductMapper.ToProductResponseDTO).ToList();
         }
 
-        public ProductResponseDTO GetProductById(string id)
+        // Method to get a product by ID asynchronously
+        public async Task<ProductResponseDTO> GetProductByIdAsync(string id)
         {
-            var product = _context.Products.Find(p => p.Id == id).FirstOrDefault();
+            var product = await _context.Products.Find(p => p.Id == id).FirstOrDefaultAsync();
             return product != null ? ProductMapper.ToProductResponseDTO(product) : null;
         }
 
-        public ProductResponseDTO CreateProduct(
+        // Method to create a product asynchronously
+        public async Task<ProductResponseDTO> CreateProductAsync(
             ProductRequestDTO productRequestDTO,
             string vendorId
         )
         {
             var product = ProductMapper.ToProductModel(productRequestDTO, vendorId);
-            _context.Products.InsertOne(product);
+            await _context.Products.InsertOneAsync(product);
             return ProductMapper.ToProductResponseDTO(product);
         }
 
-        public bool UpdateProduct(string id, ProductRequestDTO productRequestDTO, string vendorId)
+        // Method to update a product asynchronously
+        public async Task<bool> UpdateProductAsync(
+            string id,
+            ProductRequestDTO productRequestDTO,
+            string vendorId
+        )
         {
             var updateDefinition = Builders<Product>
                 .Update.Set(p => p.Name, productRequestDTO.Name)
@@ -120,7 +123,7 @@ namespace ECommerceBackend.Service.Implementations
                 .Set(p => p.IsFeatured, productRequestDTO.IsFeatured)
                 .Set(p => p.UpdatedAt, DateTime.UtcNow);
 
-            var result = _context.Products.UpdateOne(
+            var result = await _context.Products.UpdateOneAsync(
                 p => p.Id == id && p.VendorId == vendorId,
                 updateDefinition
             );
@@ -128,30 +131,33 @@ namespace ECommerceBackend.Service.Implementations
             return result.ModifiedCount > 0;
         }
 
-        public bool DeleteProduct(string id, string vendorId)
+        // Method to delete (soft delete) a product asynchronously
+        public async Task<bool> DeleteProductAsync(string id, string vendorId)
         {
             var updateDefinition = Builders<Product>.Update.Set(p => p.IsActive, false);
-            var result = _context.Products.UpdateOne(
+            var result = await _context.Products.UpdateOneAsync(
                 p => p.Id == id && p.VendorId == vendorId,
                 updateDefinition
             );
             return result.ModifiedCount > 0;
         }
 
-        public bool ActivateProduct(string id, string vendorId)
+        // Method to activate a product asynchronously
+        public async Task<bool> ActivateProductAsync(string id, string vendorId)
         {
             var updateDefinition = Builders<Product>.Update.Set(p => p.IsActive, true);
-            var result = _context.Products.UpdateOne(
+            var result = await _context.Products.UpdateOneAsync(
                 p => p.Id == id && p.VendorId == vendorId,
                 updateDefinition
             );
             return result.ModifiedCount > 0;
         }
 
-        public bool DeactivateProduct(string id, string vendorId)
+        // Method to deactivate a product asynchronously
+        public async Task<bool> DeactivateProductAsync(string id, string vendorId)
         {
             var updateDefinition = Builders<Product>.Update.Set(p => p.IsActive, false);
-            var result = _context.Products.UpdateOne(
+            var result = await _context.Products.UpdateOneAsync(
                 p => p.Id == id && p.VendorId == vendorId,
                 updateDefinition
             );

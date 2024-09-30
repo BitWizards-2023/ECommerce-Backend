@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Threading.Tasks;
 using ECommerceBackend.DTOs.Request.Product;
 using ECommerceBackend.DTOs.Response.Auth;
 using ECommerceBackend.DTOs.Response.Product;
@@ -20,9 +21,9 @@ namespace ECommerceBackend.Controllers
         }
 
         [HttpGet]
-        public IActionResult GetProducts()
+        public async Task<IActionResult> GetProducts()
         {
-            var products = _productService.GetProducts();
+            var products = await _productService.GetProductsAsync();
             return Ok(
                 new ResponseDTO<List<ProductResponseDTO>>(
                     true,
@@ -34,7 +35,7 @@ namespace ECommerceBackend.Controllers
 
         // Endpoint for searching products with optional filtering by keyword, categoryId, and vendorId
         [HttpGet("search")]
-        public IActionResult SearchProducts(
+        public async Task<IActionResult> SearchProducts(
             [FromQuery] string keyword = "",
             [FromQuery] string categoryId = "",
             [FromQuery] string vendorId = "",
@@ -42,7 +43,6 @@ namespace ECommerceBackend.Controllers
             [FromQuery] int pageSize = 10
         )
         {
-            // Validate page number and page size
             if (pageNumber <= 0 || pageSize <= 0)
             {
                 return BadRequest(
@@ -50,7 +50,7 @@ namespace ECommerceBackend.Controllers
                 );
             }
 
-            var products = _productService.SearchProducts(
+            var products = await _productService.SearchProductsAsync(
                 keyword,
                 categoryId,
                 vendorId,
@@ -79,9 +79,9 @@ namespace ECommerceBackend.Controllers
         }
 
         [HttpGet("{id}")]
-        public IActionResult GetProductById(string id)
+        public async Task<IActionResult> GetProductById(string id)
         {
-            var product = _productService.GetProductById(id);
+            var product = await _productService.GetProductByIdAsync(id);
             return product != null
                 ? Ok(
                     new ResponseDTO<ProductResponseDTO>(
@@ -95,22 +95,24 @@ namespace ECommerceBackend.Controllers
 
         [Authorize(Policy = "VendorPolicy")]
         [HttpPost]
-        public IActionResult CreateProduct([FromBody] ProductRequestDTO productRequestDTO)
+        public async Task<IActionResult> CreateProduct(
+            [FromBody] ProductRequestDTO productRequestDTO
+        )
         {
             var vendorId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var product = _productService.CreateProduct(productRequestDTO, vendorId);
+            var product = await _productService.CreateProductAsync(productRequestDTO, vendorId);
             return CreatedAtAction(nameof(GetProductById), new { id = product.Id }, product);
         }
 
         [Authorize(Policy = "VendorPolicy")]
         [HttpPut("{id}")]
-        public IActionResult UpdateProduct(
+        public async Task<IActionResult> UpdateProduct(
             string id,
             [FromBody] ProductRequestDTO productRequestDTO
         )
         {
             var vendorId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var result = _productService.UpdateProduct(id, productRequestDTO, vendorId);
+            var result = await _productService.UpdateProductAsync(id, productRequestDTO, vendorId);
             return result
                 ? NoContent()
                 : NotFound(
@@ -120,10 +122,10 @@ namespace ECommerceBackend.Controllers
 
         [Authorize(Policy = "VendorPolicy, AdminPolicy")]
         [HttpDelete("{id}")]
-        public IActionResult DeleteProduct(string id)
+        public async Task<IActionResult> DeleteProduct(string id)
         {
             var vendorId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var result = _productService.DeleteProduct(id, vendorId);
+            var result = await _productService.DeleteProductAsync(id, vendorId);
             return result
                 ? NoContent()
                 : NotFound(
@@ -133,10 +135,10 @@ namespace ECommerceBackend.Controllers
 
         [Authorize(Policy = "VendorPolicy, AdminPolicy")]
         [HttpPatch("{id}/activate")]
-        public IActionResult ActivateProduct(string id)
+        public async Task<IActionResult> ActivateProduct(string id)
         {
             var vendorId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var result = _productService.ActivateProduct(id, vendorId);
+            var result = await _productService.ActivateProductAsync(id, vendorId);
             return result
                 ? NoContent()
                 : NotFound(
@@ -146,10 +148,10 @@ namespace ECommerceBackend.Controllers
 
         [Authorize(Policy = "VendorPolicy, AdminPolicy")]
         [HttpPatch("{id}/deactivate")]
-        public IActionResult DeactivateProduct(string id)
+        public async Task<IActionResult> DeactivateProduct(string id)
         {
             var vendorId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var result = _productService.DeactivateProduct(id, vendorId);
+            var result = await _productService.DeactivateProductAsync(id, vendorId);
             return result
                 ? NoContent()
                 : NotFound(
