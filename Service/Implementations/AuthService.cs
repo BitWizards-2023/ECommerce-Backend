@@ -7,8 +7,10 @@
  * Date Created: 2024/09/18
  */
 
+using System.Security.Cryptography;
 using ECommerceBackend.Data.Contexts;
 using ECommerceBackend.DTOs.Request.Auth;
+using ECommerceBackend.DTOs.Response.Auth;
 using ECommerceBackend.Helpers;
 using ECommerceBackend.Helpers.Mapper;
 using ECommerceBackend.Helpers.utills;
@@ -17,9 +19,6 @@ using MongoDB.Driver;
 
 namespace ECommerceBackend.Services
 {
-    using System.Security.Cryptography;
-    using ECommerceBackend.DTOs.Response.Auth;
-
     public class AuthService : IAuthService
     {
         private readonly MongoDbContext _context;

@@ -39,6 +39,7 @@ builder.Services.AddSingleton<MongoDbContext>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserServices, UserService>();
 builder.Services.AddScoped<IBloblService, BlobService>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
 
 // Add controllers
 // Registers MVC controllers for handling HTTP requests
