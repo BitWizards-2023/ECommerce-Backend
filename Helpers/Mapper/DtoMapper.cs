@@ -5,7 +5,7 @@
  * Date: 2024-09-29
  */
 
-using ECommerceBackend.DTOs.Response;
+using ECommerceBackend.DTOs.Response.Auth;
 using ECommerceBackend.Models;
 
 namespace ECommerceBackend.Helpers

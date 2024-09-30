@@ -1,13 +1,7 @@
-using System;
-using System;
-using System.IO;
-using System.Threading.Tasks;
 using ECommerceBackend.DTOs.Request.Upload;
-using ECommerceBackend.DTOs.Response.Upload;
 using ECommerceBackend.Helpers.Mapper;
 using ECommerceBackend.Service.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 
 namespace ECommerceBackend.Controllers
 {

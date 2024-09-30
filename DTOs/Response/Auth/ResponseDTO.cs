@@ -1,4 +1,4 @@
-namespace ECommerceBackend.DTOs.Response
+namespace ECommerceBackend.DTOs.Response.Auth
 {
     public class ResponseDTO<T>
     {

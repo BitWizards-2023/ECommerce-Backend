@@ -1,7 +1,6 @@
 using System.Security.Claims;
-using ECommerceBackend.DTOs.Request;
-using ECommerceBackend.DTOs.Response;
-using ECommerceBackend.Helpers;
+using ECommerceBackend.DTOs.Request.Auth;
+using ECommerceBackend.DTOs.Response.Auth;
 using ECommerceBackend.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

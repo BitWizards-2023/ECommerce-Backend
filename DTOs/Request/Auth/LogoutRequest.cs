@@ -1,6 +1,4 @@
-using System;
-
-namespace ECommerceBackend.DTOs.Request;
+namespace ECommerceBackend.DTOs.Request.Auth;
 
 public class LogoutRequest
 {

@@ -5,8 +5,7 @@
  * Date: 2024-09-29
  */
 
-using System;
-using ECommerceBackend.DTOs.Request;
+using ECommerceBackend.DTOs.Request.Auth;
 using ECommerceBackend.Models;
 using ECommerceBackend.Utilities;
 

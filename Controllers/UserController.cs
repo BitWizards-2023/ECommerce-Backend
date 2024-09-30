@@ -1,6 +1,5 @@
 using ECommerceBackend.Data.Repository.Interfaces;
-using ECommerceBackend.DTOs.Response;
-using ECommerceBackend.Helpers;
+using ECommerceBackend.DTOs.Response.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

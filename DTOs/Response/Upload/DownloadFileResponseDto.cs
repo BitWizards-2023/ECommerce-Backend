@@ -1,5 +1,3 @@
-using System;
-
 namespace ECommerceBackend.DTOs.Response.Upload;
 
 public class DownloadFileResponseDto

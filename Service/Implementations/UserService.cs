@@ -7,7 +7,7 @@
 
 using ECommerceBackend.Data.Contexts;
 using ECommerceBackend.Data.Repository.Interfaces;
-using ECommerceBackend.DTOs.Response;
+using ECommerceBackend.DTOs.Response.Auth;
 using ECommerceBackend.Helpers;
 using ECommerceBackend.Models;
 using MongoDB.Driver;

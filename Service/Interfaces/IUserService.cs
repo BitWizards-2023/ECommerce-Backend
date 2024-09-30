@@ -1,6 +1,4 @@
-using System;
-using ECommerceBackend.DTOs.Response;
-using ECommerceBackend.Models;
+using ECommerceBackend.DTOs.Response.Auth;
 
 namespace ECommerceBackend.Data.Repository.Interfaces;
 

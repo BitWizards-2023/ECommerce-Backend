@@ -1,4 +1,5 @@
-using ECommerceBackend.DTOs.Response;
+using ECommerceBackend.DTOs.Request.Auth;
+using ECommerceBackend.DTOs.Response.Auth;
 
 namespace ECommerceBackend.Services
 {
