@@ -12,6 +12,8 @@ using ECommerceBackend.Data.Repository.Implementations;
 using ECommerceBackend.Data.Repository.Interfaces;
 using ECommerceBackend.Models;
 using ECommerceBackend.Service.Implementations;
+using ECommerceBackend.Service.Implementations;
+using ECommerceBackend.Service.Interfaces;
 using ECommerceBackend.Service.Interfaces;
 using ECommerceBackend.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -40,6 +42,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserServices, UserService>();
 builder.Services.AddScoped<IBloblService, BlobService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<IProductService, ProductService>();
 
 // Add controllers
 // Registers MVC controllers for handling HTTP requests
