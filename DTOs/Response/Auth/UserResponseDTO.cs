@@ -1,3 +1,5 @@
+using ECommerceBackend.DTOs.Response.Auth;
+
 namespace ECommerceBackend.DTOs.Response.Auth
 {
     public class UserResponseDTO
@@ -13,14 +15,5 @@ namespace ECommerceBackend.DTOs.Response.Auth
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
         public string Role { get; set; } = string.Empty;
         public string Profile_pic { get; set; } = string.Empty;
-    }
-
-    public class AddressResponseDTO
-    {
-        public string Street { get; set; }
-        public string City { get; set; }
-        public string State { get; set; }
-        public string PostalCode { get; set; }
-        public string Country { get; set; }
     }
 }

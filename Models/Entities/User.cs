@@ -45,6 +45,9 @@ namespace ECommerceBackend.Models
         [BsonElement("IsDeleted")]
         public bool IsDeleted { get; set; } = false;
 
+        [BsonElement("IsActive")]
+        public bool IsActive { get; set; } = true;
+
         [BsonElement("RefreshToken")]
         public string RefreshToken { get; set; } = string.Empty;
 

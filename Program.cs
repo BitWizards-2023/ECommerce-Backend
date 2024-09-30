@@ -138,6 +138,8 @@ builder.Services.AddAuthorization(options =>
 
     options.AddPolicy("AdminPolicy", policy => policy.RequireRole("Admin"));
     options.AddPolicy("UserPolicy", policy => policy.RequireRole("User"));
+    options.AddPolicy("CSRPolicy", policy => policy.RequireRole("CSR"));
+    options.AddPolicy("VendorPolicy", policy => policy.RequireRole("Vendor"));
 });
 
 // Register CORS policy

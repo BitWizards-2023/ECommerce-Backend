@@ -42,7 +42,7 @@ namespace ECommerceBackend.Helpers.Mapper
                     ? "Customer"
                     : registerRequest.Role,
                 ProfilePic = string.IsNullOrWhiteSpace(registerRequest.Profile_pic)
-                    ? "https://default_profile_pic.png"
+                    ? "https://shopilystorage.blob.core.windows.net/mycontainer/cd4e13a7-7ce1-4c63-beb4-4e44cdfa10f0.png"
                     : registerRequest.Profile_pic,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
