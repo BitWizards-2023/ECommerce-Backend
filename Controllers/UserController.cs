@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using ECommerceBackend.Data.Repository.Interfaces;
 using ECommerceBackend.DTOs.Request.Auth;
 using ECommerceBackend.DTOs.Response.Auth;
@@ -169,6 +170,40 @@ namespace ECommerceBackend.Controllers
                 }
 
                 return Ok(new ResponseDTO<string>(true, "User approved successfully", null));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(
+                    500,
+                    new ResponseDTO<string>(false, $"An error occurred: {ex.Message}", null)
+                );
+            }
+        }
+
+        [Authorize]
+        [HttpPut("update-me")]
+        public IActionResult UpdateUserDetails([FromBody] UserUpdateRequest userUpdateDTO)
+        {
+            try
+            {
+                // Extract the user ID from the token
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized(new ResponseDTO<string>(false, "Invalid token", null));
+                }
+
+                var result = _userService.UpdateUser(userId, userUpdateDTO);
+
+                if (!result)
+                {
+                    return NotFound(
+                        new ResponseDTO<string>(false, "User not found or update failed", null)
+                    );
+                }
+
+                return Ok(new ResponseDTO<string>(true, "User details updated successfully", null));
             }
             catch (Exception ex)
             {
