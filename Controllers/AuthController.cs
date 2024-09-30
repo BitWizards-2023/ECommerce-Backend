@@ -43,17 +43,7 @@ namespace ECommerceBackend.Controllers
         [HttpPost("register")]
         public IActionResult Register([FromBody] RegisterRequest model)
         {
-            var success = _authService.Register(
-                model.Email,
-                model.Password,
-                model.Username,
-                model.Role,
-                model.FirstName,
-                model.LastName,
-                model.Address,
-                model.PhoneNumber,
-                model.Profile_pic
-            );
+            var success = _authService.Register(model);
 
             if (!success)
             {

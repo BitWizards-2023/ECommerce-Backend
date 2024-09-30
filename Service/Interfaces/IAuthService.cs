@@ -1,5 +1,4 @@
 using ECommerceBackend.DTOs.Response;
-using ECommerceBackend.Models;
 
 namespace ECommerceBackend.Services
 {
@@ -7,17 +6,7 @@ namespace ECommerceBackend.Services
     {
         string Authenticate(string email, string password, out string refreshToken);
 
-        bool Register(
-            string email,
-            string password,
-            string username,
-            string role,
-            string firstName,
-            string lastName,
-            AddressRequest address,
-            string phoneNumber,
-            string ProfilePic
-        );
+        bool Register(RegisterRequest registerRequest);
 
         string RefreshToken(string token, string refreshToken);
 
