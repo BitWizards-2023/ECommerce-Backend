@@ -33,6 +33,9 @@ namespace ECommerceBackend.Models
         [BsonElement("PhoneNumber")]
         public string PhoneNumber { get; set; } = string.Empty;
 
+        [BsonElement("ProfilePic")]
+        public string ProfilePic { get; set; } = string.Empty;
+
         [BsonElement("CreatedAt")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

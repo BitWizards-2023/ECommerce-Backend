@@ -15,7 +15,8 @@ namespace ECommerceBackend.Services
             string firstName,
             string lastName,
             AddressRequest address,
-            string phoneNumber
+            string phoneNumber,
+            string ProfilePic
         );
 
         string RefreshToken(string token, string refreshToken);

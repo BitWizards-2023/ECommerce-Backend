@@ -7,7 +7,8 @@ public class RegisterRequest
     public string LastName { get; set; } = string.Empty;
     public AddressRequest Address { get; set; } = new AddressRequest();
     public string PhoneNumber { get; set; } = string.Empty;
-    public string Role { get; set; } = string.Empty;
+    public string Role { get; set; } = "Customer";
+    public string Profile_pic { get; set; } = string.Empty;
 }
 
 public class AddressRequest

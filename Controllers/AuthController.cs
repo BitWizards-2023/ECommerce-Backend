@@ -51,7 +51,8 @@ namespace ECommerceBackend.Controllers
                 model.FirstName,
                 model.LastName,
                 model.Address,
-                model.PhoneNumber
+                model.PhoneNumber,
+                model.Profile_pic
             );
 
             if (!success)

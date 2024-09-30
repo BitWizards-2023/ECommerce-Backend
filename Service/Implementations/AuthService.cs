@@ -11,7 +11,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using ECommerceBackend.Data.Contexts;
-using ECommerceBackend.DTOs.Response;
+using ECommerceBackend.Helpers;
 using ECommerceBackend.Models;
 using ECommerceBackend.Utilities;
 using Microsoft.IdentityModel.Tokens;
@@ -113,10 +113,7 @@ namespace ECommerceBackend.Services
             };
 
             var token = tokenHandler.CreateToken(tokenDescriptor);
-            Console.WriteLine($"Token: {token}");
-
             var encodedToken = tokenHandler.WriteToken(token);
-            Console.WriteLine($"encodedToken: {encodedToken}");
             return encodedToken;
         }
 
@@ -158,7 +155,8 @@ namespace ECommerceBackend.Services
             string firstName,
             string lastName,
             AddressRequest address,
-            string phoneNumber
+            string phoneNumber,
+            string ProfilePic
         )
         {
             if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
@@ -190,7 +188,10 @@ namespace ECommerceBackend.Services
                     IsDeleted = false,
                 },
                 PhoneNumber = phoneNumber,
-                Role = role ?? "User",
+                Role = string.IsNullOrWhiteSpace(role) ? "Customer" : role,
+                ProfilePic = string.IsNullOrWhiteSpace(ProfilePic)
+                    ? "https://shopilystorage.blob.core.windows.net/mycontainer/7e888d3f-e276-49c8-bdbc-e5a4fa53a7f0.png"
+                    : ProfilePic,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
                 IsDeleted = false,
@@ -270,23 +271,7 @@ namespace ECommerceBackend.Services
             if (user == null)
                 return null;
 
-            return new UserResponseDTO
-            {
-                Id = user.Id,
-                Username = user.Username,
-                Email = user.Email,
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                PhoneNumber = user.PhoneNumber,
-                Address = new AddressResponseDTO
-                {
-                    Street = user.Address.Street,
-                    City = user.Address.City,
-                    State = user.Address.State,
-                    PostalCode = user.Address.PostalCode,
-                    Country = user.Address.Country,
-                },
-            };
+            return DtoMapper.ToUserResponseDTO(user);
         }
     }
 }
