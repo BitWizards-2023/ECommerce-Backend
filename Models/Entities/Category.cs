@@ -31,5 +31,9 @@ namespace ECommerceBackend.Models.Entities
         // Timestamp when the category was last updated
         [BsonElement("updatedAt")]
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+        // List of image URLs or file paths
+        [BsonElement("images")]
+        public string ImageUrl { get; set; } = string.Empty;
     }
 }

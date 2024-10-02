@@ -74,3 +74,5 @@ $RECYCLE.BIN/
 
 # Ignore all logs
 *.log
+
+.fake

@@ -11,4 +11,6 @@ public class CategoryResponseDTO
     public List<CategoryResponseDTO> Children { get; set; } = new List<CategoryResponseDTO>();
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+
+    public string? ImageUrl { get; set; } = string.Empty;
 }

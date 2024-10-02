@@ -48,6 +48,7 @@ namespace ECommerceBackend.Helpers.Mapper
                 ParentId = category.ParentId,
                 CreatedAt = category.CreatedAt,
                 UpdatedAt = category.UpdatedAt,
+                ImageUrl = category.ImageUrl,
             };
         }
     }
