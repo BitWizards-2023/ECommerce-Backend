@@ -120,7 +120,8 @@ namespace ECommerceBackend.Controllers
                 );
         }
 
-        [Authorize(Policy = "VendorPolicy, AdminPolicy")]
+        [Authorize(Policy = "VendorPolicy")]
+        [Authorize(Policy = "AdminPolicy")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProduct(string id)
         {
@@ -133,7 +134,8 @@ namespace ECommerceBackend.Controllers
                 );
         }
 
-        [Authorize(Policy = "VendorPolicy, AdminPolicy")]
+        [Authorize(Policy = "VendorPolicy")]
+        [Authorize(Policy = "AdminPolicy")]
         [HttpPatch("{id}/activate")]
         public async Task<IActionResult> ActivateProduct(string id)
         {
@@ -146,7 +148,8 @@ namespace ECommerceBackend.Controllers
                 );
         }
 
-        [Authorize(Policy = "VendorPolicy, AdminPolicy")]
+        [Authorize(Policy = "VendorPolicy")]
+        [Authorize(Policy = "AdminPolicy")]
         [HttpPatch("{id}/deactivate")]
         public async Task<IActionResult> DeactivateProduct(string id)
         {
