@@ -43,6 +43,7 @@ builder.Services.AddScoped<IUserServices, UserService>();
 builder.Services.AddScoped<IBloblService, BlobService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
 
 // Add controllers
 // Registers MVC controllers for handling HTTP requests
@@ -141,7 +142,7 @@ builder.Services.AddAuthorization(options =>
         .Build();
 
     options.AddPolicy("AdminPolicy", policy => policy.RequireRole("Admin"));
-    options.AddPolicy("UserPolicy", policy => policy.RequireRole("User"));
+    options.AddPolicy("CustomerPolicy", policy => policy.RequireRole("Customer"));
     options.AddPolicy("CSRPolicy", policy => policy.RequireRole("CSR"));
     options.AddPolicy("VendorPolicy", policy => policy.RequireRole("Vendor"));
     options.AddPolicy("VendorOrAdminPolicy", policy => policy.RequireRole("Vendor", "Admin"));
