@@ -41,6 +41,14 @@ namespace ECommerceBackend.Service.Implementations
                     );
                 }
 
+                // Validate stock levels
+                if (product.StockLevel < itemDTO.Quantity)
+                {
+                    throw new InvalidOperationException(
+                        $"Insufficient stock for product {product.Name}. Available: {product.StockLevel}, Requested: {itemDTO.Quantity}"
+                    );
+                }
+
                 // Calculate total amount
                 totalAmount += product.Price * itemDTO.Quantity;
 
