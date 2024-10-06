@@ -1,7 +1,9 @@
+using System.Collections.Generic;
+using System.Linq;
 using ECommerceBackend.DTOs.Request.Order;
 using ECommerceBackend.DTOs.Response.Order;
 using ECommerceBackend.Models.Entities;
-using AddressDTO = ECommerceBackend.DTOs.Response.Order.AddressDTO;
+using OrderItemDTO = ECommerceBackend.DTOs.Response.Order.OrderItemDTO;
 
 namespace ECommerceBackend.Helpers.Mapper
 {
@@ -51,7 +53,7 @@ namespace ECommerceBackend.Helpers.Mapper
             };
         }
 
-        public static OrderResponseDTO ToOrderResponseDTO(Order order)
+        public static OrderResponseDTO ToOrderResponseDTO(Order order, List<Product> products)
         {
             return new OrderResponseDTO
             {
@@ -59,7 +61,7 @@ namespace ECommerceBackend.Helpers.Mapper
                 OrderNumber = order.OrderNumber,
                 TotalAmount = order.TotalAmount,
                 Status = order.Status,
-                ShippingAddress = new AddressDTO
+                ShippingAddress = new DTOs.Response.Order.AddressDTO
                 {
                     Street = order.ShippingAddress.Street,
                     City = order.ShippingAddress.City,
@@ -69,22 +71,135 @@ namespace ECommerceBackend.Helpers.Mapper
                 },
                 PaymentStatus = order.PaymentStatus,
                 CreatedAt = order.CreatedAt,
-                Items = order.Items.Select(ToOrderItemDTO).ToList(),
+                Items = order.Items.Select(item => ToOrderItemDTO(item, products)).ToList(),
             };
         }
 
-        public static DTOs.Response.Order.OrderItemDTO ToOrderItemDTO(OrderItem orderItem)
+        // Maps OrderItem to OrderItemDTO including product details
+        public static OrderItemDTO ToOrderItemDTO(OrderItem orderItem, List<Product> products)
         {
-            return new DTOs.Response.Order.OrderItemDTO
+            // Get product details for the order item
+            var product = products.FirstOrDefault(p => p.Id == orderItem.ProductId);
+
+            return new OrderItemDTO
             {
                 ProductId = orderItem.ProductId,
+                VendorId = orderItem.VendorId,
                 Quantity = orderItem.Quantity,
+                Status = orderItem.Status,
+                ProductDetails =
+                    product != null
+                        ? new ProductDetailsDTO
+                        {
+                            Name = product.Name,
+                            Description = product.Description,
+                            Price = product.Price,
+                            Images = product.Images,
+                        }
+                        : null // Return null if the product is not found
+                ,
+            };
+        }
+
+        public static OrderResponseDTO ToVendorOrderResponseDTO(
+            Order order,
+            string vendorId,
+            List<Product> products
+        )
+        {
+            return new OrderResponseDTO
+            {
+                Id = order.Id,
+                OrderNumber = order.OrderNumber,
+                TotalAmount = order.TotalAmount,
+                Status = order.Status,
+                ShippingAddress = new DTOs.Response.Order.AddressDTO
+                {
+                    Street = order.ShippingAddress.Street,
+                    City = order.ShippingAddress.City,
+                    State = order.ShippingAddress.State,
+                    PostalCode = order.ShippingAddress.PostalCode,
+                    Country = order.ShippingAddress.Country,
+                },
+                PaymentStatus = order.PaymentStatus,
+                CreatedAt = order.CreatedAt,
+                Items = order
+                    .Items.Where(item => item.VendorId == vendorId) // Only include items for this vendor
+                    .Select(item => ToOrderItemDTO(item, products))
+                    .ToList(),
             };
         }
 
         private static string GenerateOrderNumber()
         {
             return $"O{DateTime.UtcNow.Ticks}";
+        }
+
+        public static OrderResponseDTO ToVendorOrderResponseDTO(Order order, string vendorId)
+        {
+            return new OrderResponseDTO
+            {
+                Id = order.Id,
+                OrderNumber = order.OrderNumber,
+                TotalAmount = order.TotalAmount,
+                Status = order.Status,
+                ShippingAddress = new DTOs.Response.Order.AddressDTO
+                {
+                    Street = order.ShippingAddress.Street,
+                    City = order.ShippingAddress.City,
+                    State = order.ShippingAddress.State,
+                    PostalCode = order.ShippingAddress.PostalCode,
+                    Country = order.ShippingAddress.Country,
+                },
+                PaymentStatus = order.PaymentStatus,
+                CreatedAt = order.CreatedAt,
+                // Filter the items to only include the vendor's products
+                Items = order
+                    .Items.Where(item => item.VendorId == vendorId)
+                    .Select(ToOrderItemDTO)
+                    .ToList(),
+            };
+        }
+
+        public static OrderItemDTO ToOrderItemDTO(OrderItem orderItem)
+        {
+            return new OrderItemDTO
+            {
+                ProductId = orderItem.ProductId,
+                VendorId = orderItem.VendorId,
+                Quantity = orderItem.Quantity,
+                Status = orderItem.Status,
+            };
+        }
+
+        public static OrderResponseDTO ToSingleOrderResponseDTO(Order order)
+        {
+            return new OrderResponseDTO
+            {
+                Id = order.Id,
+                OrderNumber = order.OrderNumber,
+                TotalAmount = order.TotalAmount,
+                Status = order.Status,
+                ShippingAddress = new DTOs.Response.Order.AddressDTO
+                {
+                    Street = order.ShippingAddress.Street,
+                    City = order.ShippingAddress.City,
+                    State = order.ShippingAddress.State,
+                    PostalCode = order.ShippingAddress.PostalCode,
+                    Country = order.ShippingAddress.Country,
+                },
+                PaymentStatus = order.PaymentStatus,
+                CreatedAt = order.CreatedAt,
+                Items = order
+                    .Items.Select(item => new OrderItemDTO
+                    {
+                        ProductId = item.ProductId,
+                        VendorId = item.VendorId,
+                        Quantity = item.Quantity,
+                        Status = item.Status,
+                    })
+                    .ToList(),
+            };
         }
     }
 }
