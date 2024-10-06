@@ -55,9 +55,11 @@ namespace ECommerceBackend.Helpers.utills
                     {
                         new Claim(ClaimTypes.NameIdentifier, user.Id),
                         new Claim(ClaimTypes.Email, user.Email),
+                        new Claim(ClaimTypes.Email, user.Email),
                         new Claim(ClaimTypes.Role, user.Role),
                         new Claim(JwtRegisteredClaimNames.Aud, audience),
                         new Claim(JwtRegisteredClaimNames.Iss, issuer),
+                        new Claim("isActive", user.IsActive.ToString()),
                     }
                 ),
                 NotBefore = now,
