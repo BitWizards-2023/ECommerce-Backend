@@ -1,3 +1,4 @@
+using ECommerceBackend.Models.Entities;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
@@ -59,6 +60,16 @@ namespace ECommerceBackend.Models
 
         [BsonElement("ResetTokenExpiryTime")]
         public DateTime ResetTokenExpiryTime { get; set; } = DateTime.UtcNow;
+
+        // Additional fields for vendor ratings
+        [BsonElement("Ratings")]
+        public List<VendorRating> Ratings { get; set; } = new List<VendorRating>();
+
+        [BsonElement("AverageRating")]
+        public double AverageRating { get; set; } = 0.0;
+
+        [BsonElement("TotalReviews")]
+        public int TotalReviews { get; set; } = 0;
     }
 
     public class Address

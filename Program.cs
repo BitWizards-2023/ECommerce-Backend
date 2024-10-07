@@ -16,6 +16,8 @@ using ECommerceBackend.Service.Implementations;
 using ECommerceBackend.Service.Interfaces;
 using ECommerceBackend.Service.Interfaces;
 using ECommerceBackend.Services;
+using ECommerceBackend.Services.Implementations;
+using ECommerceBackend.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
@@ -45,6 +47,7 @@ builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<ICartService, CartService>();
+builder.Services.AddScoped<IVendorRatingService, VendorRatingService>();
 
 // Add controllers
 // Registers MVC controllers for handling HTTP requests
