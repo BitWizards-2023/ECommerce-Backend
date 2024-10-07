@@ -41,7 +41,7 @@ namespace ECommerceBackend.Service.Implementations
             return CartMapper.ToCartResponseDTO(cart);
         }
 
-        // Add or update items in the cart
+        // Add or update items in the cart with stock validation
         public async Task<CartResponseDTO> AddOrUpdateCartItemAsync(
             string userId,
             CartItemRequestDTO cartItemRequestDTO
@@ -68,6 +68,14 @@ namespace ECommerceBackend.Service.Implementations
             {
                 throw new InvalidOperationException(
                     $"Product with ID {cartItemRequestDTO.ProductId} does not exist or is inactive."
+                );
+            }
+
+            // Validate stock levels
+            if (product.StockLevel < cartItemRequestDTO.Quantity)
+            {
+                throw new InvalidOperationException(
+                    $"Insufficient stock for product {product.Name}. Available: {product.StockLevel}, Requested: {cartItemRequestDTO.Quantity}"
                 );
             }
 
@@ -111,6 +119,17 @@ namespace ECommerceBackend.Service.Implementations
             if (cartItem == null)
             {
                 throw new InvalidOperationException($"Cart item with ID {cartItemId} not found.");
+            }
+
+            // Validate stock levels for the updated quantity
+            var product = await _context
+                .Products.Find(p => p.Id == cartItem.ProductId)
+                .FirstOrDefaultAsync();
+            if (product.StockLevel < updateCartItemRequestDTO.Quantity)
+            {
+                throw new InvalidOperationException(
+                    $"Insufficient stock for product {product.Name}. Available: {product.StockLevel}, Requested: {updateCartItemRequestDTO.Quantity}"
+                );
             }
 
             cartItem.Quantity = updateCartItemRequestDTO.Quantity;
