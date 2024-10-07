@@ -37,5 +37,6 @@ namespace ECommerceBackend.Data.Contexts
 
         public IMongoCollection<Product> Products => _database.GetCollection<Product>("Products");
         public IMongoCollection<Order> Orders => _database.GetCollection<Order>("Orders");
+        public IMongoCollection<Cart> Carts => _database.GetCollection<Cart>("Carts");
     }
 }
