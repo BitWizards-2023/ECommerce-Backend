@@ -50,7 +50,7 @@ namespace ECommerceBackend.Controllers
             }
         }
 
-        [Authorize(Policy = "AdminPolicy")]
+        [Authorize]
         [HttpGet("{id}")]
         public IActionResult GetUserById(string id)
         {
