@@ -147,12 +147,12 @@ builder.Services.AddAuthorization(options =>
         .RequireAuthenticatedUser()
         .Build();
 
-    options.AddPolicy("AdminPolicy", policy => policy.RequireRole("Administrator"));
+    options.AddPolicy("AdminPolicy", policy => policy.RequireRole("Admin"));
     options.AddPolicy("CustomerPolicy", policy => policy.RequireRole("Customer"));
     options.AddPolicy("CSRPolicy", policy => policy.RequireRole("CSR"));
     options.AddPolicy("VendorPolicy", policy => policy.RequireRole("Vendor"));
-    options.AddPolicy("VendorOrAdminPolicy", policy => policy.RequireRole("Vendor", "Administrator"));
-    options.AddPolicy("AdminOrCSRPolicy", policy => policy.RequireRole("CSR", "Administrator"));
+    options.AddPolicy("VendorOrAdminPolicy", policy => policy.RequireRole("Vendor", "Admin"));
+    options.AddPolicy("AdminOrCSRPolicy", policy => policy.RequireRole("CSR", "Admin"));
 });
 
 // Register CORS policy
