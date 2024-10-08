@@ -25,6 +25,7 @@ namespace ECommerceBackend.Helpers
                 Id = user.Id,
                 Username = user.Username,
                 Email = user.Email,
+                Role=user.Role,
                 FirstName = user.FirstName,
                 LastName = user.LastName,
                 PhoneNumber = user.PhoneNumber,

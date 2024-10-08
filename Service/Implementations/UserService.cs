@@ -77,10 +77,14 @@ namespace ECommerceBackend.Data.Repository.Implementations
 
         public bool UpdateUser(string id, UserUpdateRequest userUpdateRequest)
         {
+            Console.WriteLine(userUpdateRequest.Role);
+            Console.WriteLine(userUpdateRequest.PhoneNumber);
+            
             var updateDefinition = Builders<User>
                 .Update.Set(u => u.FirstName, userUpdateRequest.FirstName)
                 .Set(u => u.LastName, userUpdateRequest.LastName)
                 .Set(u => u.Email, userUpdateRequest.Email)
+                .Set(u => u.Role, userUpdateRequest.Role)
                 .Set(u => u.PhoneNumber, userUpdateRequest.PhoneNumber)
                 .Set(u => u.Address.Street, userUpdateRequest.Address.Street)
                 .Set(u => u.Address.City, userUpdateRequest.Address.City)
