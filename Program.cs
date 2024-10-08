@@ -10,10 +10,15 @@ using System.Text;
 using ECommerceBackend.Data.Contexts;
 using ECommerceBackend.Data.Repository.Implementations;
 using ECommerceBackend.Data.Repository.Interfaces;
+using ECommerceBackend.Helpers.utills;
 using ECommerceBackend.Models;
 using ECommerceBackend.Service.Implementations;
+using ECommerceBackend.Service.Implementations;
+using ECommerceBackend.Service.Interfaces;
 using ECommerceBackend.Service.Interfaces;
 using ECommerceBackend.Services;
+using ECommerceBackend.Services.Implementations;
+using ECommerceBackend.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
@@ -39,6 +44,12 @@ builder.Services.AddSingleton<MongoDbContext>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserServices, UserService>();
 builder.Services.AddScoped<IBloblService, BlobService>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<ICartService, CartService>();
+builder.Services.AddScoped<IVendorRatingService, VendorRatingService>();
+builder.Services.AddSingleton<FirebaseUtils>();
 
 // Add controllers
 // Registers MVC controllers for handling HTTP requests
@@ -137,7 +148,11 @@ builder.Services.AddAuthorization(options =>
         .Build();
 
     options.AddPolicy("AdminPolicy", policy => policy.RequireRole("Admin"));
-    options.AddPolicy("UserPolicy", policy => policy.RequireRole("User"));
+    options.AddPolicy("CustomerPolicy", policy => policy.RequireRole("Customer"));
+    options.AddPolicy("CSRPolicy", policy => policy.RequireRole("CSR"));
+    options.AddPolicy("VendorPolicy", policy => policy.RequireRole("Vendor"));
+    options.AddPolicy("VendorOrAdminPolicy", policy => policy.RequireRole("Vendor", "Admin"));
+    options.AddPolicy("AdminOrCSRPolicy", policy => policy.RequireRole("CSR", "Admin"));
 });
 
 // Register CORS policy

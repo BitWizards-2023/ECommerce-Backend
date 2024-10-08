@@ -1,3 +1,4 @@
+using ECommerceBackend.Models.Entities;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
@@ -45,6 +46,9 @@ namespace ECommerceBackend.Models
         [BsonElement("IsDeleted")]
         public bool IsDeleted { get; set; } = false;
 
+        [BsonElement("IsActive")]
+        public bool IsActive { get; set; } = true;
+
         [BsonElement("RefreshToken")]
         public string RefreshToken { get; set; } = string.Empty;
 
@@ -56,6 +60,23 @@ namespace ECommerceBackend.Models
 
         [BsonElement("ResetTokenExpiryTime")]
         public DateTime ResetTokenExpiryTime { get; set; } = DateTime.UtcNow;
+
+        // Additional fields for vendor ratings
+        [BsonElement("Ratings")]
+        public List<VendorRating> Ratings { get; set; } = new List<VendorRating>();
+
+        [BsonElement("AverageRating")]
+        public double AverageRating { get; set; } = 0.0;
+
+        [BsonElement("TotalReviews")]
+        public int TotalReviews { get; set; } = 0;
+
+        // Additional fields for FCM token management
+        [BsonElement("FcmTokens")]
+        public string FcmToken { get; set; } = string.Empty;
+
+        [BsonElement("LastNotificationSentAt")]
+        public DateTime? LastNotificationSentAt { get; set; }
     }
 
     public class Address

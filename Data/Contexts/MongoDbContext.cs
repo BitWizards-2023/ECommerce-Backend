@@ -1,4 +1,5 @@
 using ECommerceBackend.Models;
+using ECommerceBackend.Models.Entities;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 
@@ -31,5 +32,13 @@ namespace ECommerceBackend.Data.Contexts
         }
 
         public IMongoCollection<User> Users => _database.GetCollection<User>("Users");
+        public IMongoCollection<Category> Categories =>
+            _database.GetCollection<Category>("Categories");
+
+        public IMongoCollection<Product> Products => _database.GetCollection<Product>("Products");
+        public IMongoCollection<Order> Orders => _database.GetCollection<Order>("Orders");
+        public IMongoCollection<Cart> Carts => _database.GetCollection<Cart>("Carts");
+        public IMongoCollection<VendorRating> VendorRatings =>
+            _database.GetCollection<VendorRating>("VendorRatings");
     }
 }

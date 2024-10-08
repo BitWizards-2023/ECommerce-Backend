@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace ECommerceBackend.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/v1/[controller]")]
     public class BlobController : ControllerBase
     {
         private readonly IBloblService _blobService;

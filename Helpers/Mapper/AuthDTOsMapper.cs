@@ -42,12 +42,35 @@ namespace ECommerceBackend.Helpers.Mapper
                     ? "Customer"
                     : registerRequest.Role,
                 ProfilePic = string.IsNullOrWhiteSpace(registerRequest.Profile_pic)
-                    ? "https://default_profile_pic.png"
+                    ? "https://shopilystorage.blob.core.windows.net/mycontainer/cd4e13a7-7ce1-4c63-beb4-4e44cdfa10f0.png"
                     : registerRequest.Profile_pic,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
                 IsDeleted = false,
+
+                FcmToken = string.IsNullOrWhiteSpace(registerRequest.FcmToken)
+                    ? string.Empty
+                    : registerRequest.FcmToken,
             };
+        }
+
+        /// <summary>
+        /// Maps the UserUpdateRequest DTO to an existing User model.
+        /// </summary>
+        /// <param name="user">The existing User entity.</param>
+        /// <param name="updateRequest">The update request DTO with new values.</param>
+        public static void UpdateUserModel(User user, UserUpdateRequest updateRequest)
+        {
+            user.FirstName = updateRequest.FirstName;
+            user.LastName = updateRequest.LastName;
+            user.Email = updateRequest.Email;
+            user.PhoneNumber = updateRequest.PhoneNumber;
+            user.Address.Street = updateRequest.Address.Street;
+            user.Address.City = updateRequest.Address.City;
+            user.Address.State = updateRequest.Address.State;
+            user.Address.PostalCode = updateRequest.Address.PostalCode;
+            user.Address.Country = updateRequest.Address.Country;
+            user.UpdatedAt = DateTime.UtcNow;
         }
     }
 }
