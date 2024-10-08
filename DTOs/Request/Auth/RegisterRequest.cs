@@ -11,4 +11,5 @@ public class RegisterRequest
     public string PhoneNumber { get; set; } = string.Empty;
     public string Role { get; set; } = "Customer";
     public string Profile_pic { get; set; } = string.Empty;
+    public string FcmToken { get; set; } = string.Empty;
 }

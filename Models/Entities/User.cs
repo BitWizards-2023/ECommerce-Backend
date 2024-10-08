@@ -70,6 +70,13 @@ namespace ECommerceBackend.Models
 
         [BsonElement("TotalReviews")]
         public int TotalReviews { get; set; } = 0;
+
+        // Additional fields for FCM token management
+        [BsonElement("FcmTokens")]
+        public string FcmToken { get; set; } = string.Empty;
+
+        [BsonElement("LastNotificationSentAt")]
+        public DateTime? LastNotificationSentAt { get; set; }
     }
 
     public class Address

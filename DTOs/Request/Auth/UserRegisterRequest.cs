@@ -16,4 +16,5 @@ public class UserRegisterRequest
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     public string Role { get; set; } = string.Empty;
     public string Profile_pic { get; set; } = string.Empty;
+    public string FcmTokens { get; set; } = string.Empty;
 }

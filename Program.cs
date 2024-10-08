@@ -10,6 +10,7 @@ using System.Text;
 using ECommerceBackend.Data.Contexts;
 using ECommerceBackend.Data.Repository.Implementations;
 using ECommerceBackend.Data.Repository.Interfaces;
+using ECommerceBackend.Helpers.utills;
 using ECommerceBackend.Models;
 using ECommerceBackend.Service.Implementations;
 using ECommerceBackend.Service.Implementations;
@@ -48,6 +49,7 @@ builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IVendorRatingService, VendorRatingService>();
+builder.Services.AddSingleton<FirebaseUtils>();
 
 // Add controllers
 // Registers MVC controllers for handling HTTP requests
