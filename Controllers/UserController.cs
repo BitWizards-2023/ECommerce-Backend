@@ -1,3 +1,13 @@
+/*
+ * Author: Sudesh Sachintha Bandara
+ * Description: This file contains the implementation of the UserController class,
+ * which provides functionality for managing user-related operations in the
+ * ECommerceBackend application. It includes methods for retrieving, updating,
+ * deleting, activating, and approving users. It also provides an endpoint for
+ * users to update their own details.
+ * Date Created: 2024/09/18
+ */
+
 using System.Security.Claims;
 using ECommerceBackend.Data.Repository.Interfaces;
 using ECommerceBackend.DTOs.Request.Auth;
@@ -13,11 +23,18 @@ namespace ECommerceBackend.Controllers
     {
         private readonly IUserServices _userService;
 
+        /// <summary>
+        /// Constructor for UserController, injecting the UserServices.
+        /// </summary>
+        /// <param name="userService">Service for managing user operations</param>
         public UserController(IUserServices userService)
         {
             _userService = userService ?? throw new ArgumentNullException(nameof(userService));
         }
 
+        /// <summary>
+        /// Retrieves a list of all users (Admin only).
+        /// </summary>
         [Authorize(Policy = "AdminPolicy")]
         [HttpGet("list")]
         public IActionResult GetUsers()
@@ -50,6 +67,9 @@ namespace ECommerceBackend.Controllers
             }
         }
 
+        /// <summary>
+        /// Retrieves a specific user by their ID (Admin or CSR only).
+        /// </summary>
         [Authorize(Policy = "AdminOrCSRPolicy")]
         [HttpGet("{id}")]
         public IActionResult GetUserById(string id)
@@ -78,6 +98,9 @@ namespace ECommerceBackend.Controllers
             }
         }
 
+        /// <summary>
+        /// Updates a specific user by their ID (Admin only).
+        /// </summary>
         [Authorize(Policy = "AdminPolicy")]
         [HttpPut("{id}")]
         public IActionResult UpdateUser(string id, [FromBody] UserUpdateRequest userUpdateRequest)
@@ -103,6 +126,9 @@ namespace ECommerceBackend.Controllers
             }
         }
 
+        /// <summary>
+        /// Deletes a specific user by their ID (Admin only).
+        /// </summary>
         [Authorize(Policy = "AdminPolicy")]
         [HttpDelete("{id}")]
         public IActionResult DeleteUser(string id)
@@ -128,6 +154,9 @@ namespace ECommerceBackend.Controllers
             }
         }
 
+        /// <summary>
+        /// Activates a specific user by their ID (Admin only).
+        /// </summary>
         [Authorize(Policy = "AdminPolicy")]
         [HttpPatch("{id}/activate")]
         public IActionResult ActivateUser(string id)
@@ -154,6 +183,9 @@ namespace ECommerceBackend.Controllers
             }
         }
 
+        /// <summary>
+        /// Approves a specific user by their ID (Admin only).
+        /// </summary>
         [Authorize(Policy = "AdminPolicy")]
         [HttpPatch("{id}/approve")]
         public IActionResult ApproveUser(string id)
@@ -180,6 +212,9 @@ namespace ECommerceBackend.Controllers
             }
         }
 
+        /// <summary>
+        /// Updates the authenticated user's own details.
+        /// </summary>
         [Authorize]
         [HttpPut("update-me")]
         public IActionResult UpdateUserDetails([FromBody] UserUpdateRequest userUpdateDTO)

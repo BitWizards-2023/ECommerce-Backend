@@ -1,3 +1,12 @@
+/*
+ * Author: Sudesh Sachintha Bandara
+ * Description: This file contains the implementation of the OrderController class,
+ * which provides functionality for managing orders in the ECommerceBackend application.
+ * It includes methods for creating, retrieving, updating, and canceling orders, as well as
+ * handling specific tasks like confirming deliveries, applying filters, and adding notes to orders.
+ * Date Created: 2024/09/18
+ */
+
 using System.Security.Claims;
 using System.Threading.Tasks;
 using ECommerceBackend.DTOs.Request.Order;

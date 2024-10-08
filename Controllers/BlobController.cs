@@ -1,3 +1,11 @@
+/*
+ * Author: Sudesh Sachintha Bandara
+ * Description: This file contains the implementation of the BlobController class,
+ * which provides functionality for handling file uploads, downloads, deletion,
+ * and listing of blobs in Azure Blob Storage for the ECommerceBackend application.
+ * Date Created: 2024/09/18
+ */
+
 using ECommerceBackend.DTOs.Request.Upload;
 using ECommerceBackend.Helpers.Mapper;
 using ECommerceBackend.Service.Interfaces;
@@ -12,6 +20,11 @@ namespace ECommerceBackend.Controllers
         private readonly IBloblService _blobService;
         private readonly ILogger<BlobController> _logger;
 
+        /// <summary>
+        /// Constructor for BlobController, injecting BlobService and Logger services.
+        /// </summary>
+        /// <param name="blobService">Service for managing Azure Blob Storage operations</param>
+        /// <param name="logger">Logger for capturing logs</param>
         public BlobController(IBloblService blobService, ILogger<BlobController> logger)
         {
             _blobService = blobService;
@@ -26,11 +39,13 @@ namespace ECommerceBackend.Controllers
         [HttpPost("upload")]
         public async Task<IActionResult> Upload([FromForm] UploadFileRequestDto uploadDto)
         {
+            // Check if a file is provided in the request
             if (uploadDto.File == null || uploadDto.File.Length == 0)
                 return BadRequest("No file uploaded.");
 
             try
             {
+                // Upload the file using the BlobService and map the response DTO
                 string url = await _blobService.UploadFileAsync(uploadDto.File);
                 var responseDto = BlobDTOsMapping.MapToUploadFileResponseDto(url);
                 return Ok(responseDto);
@@ -55,11 +70,13 @@ namespace ECommerceBackend.Controllers
         [HttpGet("download/{blobName}")]
         public async Task<IActionResult> Download(string blobName)
         {
+            // Validate that blob name is provided
             if (string.IsNullOrWhiteSpace(blobName))
                 return BadRequest("Blob name is required.");
 
             try
             {
+                // Download the file from BlobService and return it as a stream
                 Stream fileStream = await _blobService.DownloadFileAsync(blobName);
                 return File(fileStream, "application/octet-stream", blobName);
             }
@@ -83,11 +100,13 @@ namespace ECommerceBackend.Controllers
         [HttpDelete("delete/{blobName}")]
         public async Task<IActionResult> Delete(string blobName)
         {
+            // Validate that blob name is provided
             if (string.IsNullOrWhiteSpace(blobName))
                 return BadRequest("Blob name is required.");
 
             try
             {
+                // Delete the file from BlobService and map the response DTO
                 bool deleted = await _blobService.DeleteFileAsync(blobName);
                 var responseDto = BlobDTOsMapping.MapToDeleteFileResponseDto(deleted);
                 if (deleted)
@@ -116,6 +135,7 @@ namespace ECommerceBackend.Controllers
         {
             try
             {
+                // List blobs from BlobService and map the response DTO
                 var blobs = await _blobService.ListBlobsAsync();
                 var responseDto = BlobDTOsMapping.MapToBlobListResponseDto(blobs);
                 return Ok(responseDto);
