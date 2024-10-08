@@ -1,6 +1,17 @@
-namespace ECommerceBackend.DTOs.Request.Auth;
+/*
+ * Author: Sudesh Sachintha Bandara
+ * Description: This class defines the LogoutRequest DTO, which is used to capture the
+ * email of the user attempting to log out of the system.
+ * Date Created: 2024/09/28
+ */
 
-public class LogoutRequest
+namespace ECommerceBackend.DTOs.Request.Auth
 {
-    public string Email { get; set; }
+    public class LogoutRequest
+    {
+        /// <summary>
+        /// Gets or sets the email address of the user attempting to log out.
+        /// </summary>
+        public string Email { get; set; }
+    }
 }

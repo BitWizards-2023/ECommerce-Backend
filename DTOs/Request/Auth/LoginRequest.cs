@@ -1,7 +1,22 @@
-namespace ECommerceBackend.DTOs.Request.Auth;
+/*
+ * Author: Sudesh Sachintha Bandara
+ * Description: This class defines the LoginRequest DTO, which is used to capture the
+ * email and password details for user login requests.
+ * Date Created: 2024/09/28
+ */
 
-public class LoginRequest
+namespace ECommerceBackend.DTOs.Request.Auth
 {
-    public string Email { get; set; }
-    public string Password { get; set; }
+    public class LoginRequest
+    {
+        /// <summary>
+        /// Gets or sets the email address of the user attempting to log in.
+        /// </summary>
+        public string Email { get; set; }
+
+        /// <summary>
+        /// Gets or sets the password of the user attempting to log in.
+        /// </summary>
+        public string Password { get; set; }
+    }
 }
