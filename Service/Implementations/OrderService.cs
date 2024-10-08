@@ -1,3 +1,12 @@
+/*
+ * Author: Sudesh Sachintha Bandara
+ * Description: This file contains the implementation of the OrderService class,
+ * which provides functionality for creating, retrieving, updating, and managing
+ * orders in the ECommerceBackend application. It includes methods for order creation,
+ * status updates, cancellations, and processing vendor and customer orders.
+ * Date Created: 2024/09/18
+ */
+
 using ECommerceBackend.Data.Contexts;
 using ECommerceBackend.DTOs.Request.Order;
 using ECommerceBackend.DTOs.Response.Auth;
@@ -15,18 +24,26 @@ namespace ECommerceBackend.Service.Implementations
     {
         private readonly MongoDbContext _context;
 
+        /// <summary>
+        /// Constructor for OrderService, injecting the MongoDB context.
+        /// </summary>
+        /// <param name="context">The MongoDB context</param>
         public OrderService(MongoDbContext context)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
+        /// <summary>
+        /// Creates a new order based on customer details and the products ordered.
+        /// </summary>
         public async Task<OrderResponseDTO> CreateOrderAsync(
             string customerId,
             CreateOrderRequestDTO orderRequestDTO
         )
         {
+            // Initialize variables for total amount and products list
             var orderItems = new List<OrderItem>();
-            var products = new List<Product>(); // List to store products
+            var products = new List<Product>();
             decimal totalAmount = 0;
 
             foreach (var itemDTO in orderRequestDTO.Items)
@@ -51,15 +68,15 @@ namespace ECommerceBackend.Service.Implementations
                     );
                 }
 
-                // Calculate total amount
+                // Calculate the total order amount
                 totalAmount += product.Price * itemDTO.Quantity;
 
-                // Create an OrderItem and pass the VendorId
+                // Map order item and associate vendor ID
                 var orderItem = OrderMapper.ToOrderItemModel(itemDTO, product.VendorId);
                 orderItems.Add(orderItem);
-                products.Add(product); // Add product to the list
+                products.Add(product);
 
-                // Adjust stock levels
+                // Adjust the stock levels in the database
                 await _context.Products.UpdateOneAsync(
                     p => p.Id == product.Id,
                     Builders<Product>.Update.Set(
@@ -69,7 +86,7 @@ namespace ECommerceBackend.Service.Implementations
                 );
             }
 
-            // Create the Order object using the mapped OrderItems and totalAmount
+            // Create the order using the mapped order items and total amount
             var order = OrderMapper.ToOrderModel(
                 orderRequestDTO,
                 customerId,
@@ -77,13 +94,16 @@ namespace ECommerceBackend.Service.Implementations
                 orderItems
             );
 
-            // Save the order in the database
+            // Save the order to the database
             await _context.Orders.InsertOneAsync(order);
 
-            // Pass products instead of orderItems to the response DTO
+            // Map the order to a response DTO and return the products list
             return OrderMapper.ToOrderResponseDTO(order, products);
         }
 
+        /// <summary>
+        /// Retrieves orders with optional filters for status, customer, date range, and pagination.
+        /// </summary>
         public async Task<List<OrderResponseDTO>> GetOrdersAsync(
             string status,
             string customerId,
@@ -93,52 +113,51 @@ namespace ECommerceBackend.Service.Implementations
             int pageSize
         )
         {
+            // Build the query filter
             var filterBuilder = Builders<Order>.Filter;
-            var filter = filterBuilder.Eq(o => o.IsDeleted, false); // Exclude soft-deleted orders by default
+            var filter = filterBuilder.Eq(o => o.IsDeleted, false);
 
             // Apply filters based on the query parameters
             if (!string.IsNullOrEmpty(status))
             {
                 filter = filter & filterBuilder.Eq(o => o.Status, status);
             }
-
             if (!string.IsNullOrEmpty(customerId))
             {
                 filter = filter & filterBuilder.Eq(o => o.CustomerId, customerId);
             }
-
             if (dateFrom.HasValue)
             {
                 filter = filter & filterBuilder.Gte(o => o.CreatedAt, dateFrom.Value);
             }
-
             if (dateTo.HasValue)
             {
                 filter = filter & filterBuilder.Lte(o => o.CreatedAt, dateTo.Value);
             }
 
-            // Apply pagination
+            // Fetch orders with pagination
             var orders = await _context
                 .Orders.Find(filter)
                 .Skip((pageNumber - 1) * pageSize)
                 .Limit(pageSize)
                 .ToListAsync();
 
-            // Retrieve all productIds from the orders
+            // Get product details for the orders
             var productIds = orders
                 .SelectMany(o => o.Items.Select(i => i.ProductId))
                 .Distinct()
                 .ToList();
-
-            // Fetch product details from the Product collection
             var products = await _context
                 .Products.Find(p => productIds.Contains(p.Id) && p.IsActive)
                 .ToListAsync();
 
-            // Map orders to DTOs including product details
+            // Map the orders to response DTOs with product details
             return orders.Select(order => OrderMapper.ToOrderResponseDTO(order, products)).ToList();
         }
 
+        /// <summary>
+        /// Retrieves a customer's orders with optional filters and pagination.
+        /// </summary>
         public async Task<List<OrderResponseDTO>> GetCustomerOrdersAsync(
             string customerId,
             string status,
@@ -148,6 +167,7 @@ namespace ECommerceBackend.Service.Implementations
             int pageSize
         )
         {
+            // Build the query filter for the customer's orders
             var filterBuilder = Builders<Order>.Filter;
             var filter =
                 filterBuilder.Eq(o => o.CustomerId, customerId)
@@ -158,25 +178,23 @@ namespace ECommerceBackend.Service.Implementations
             {
                 filter = filter & filterBuilder.Eq(o => o.Status, status);
             }
-
             if (dateFrom.HasValue)
             {
                 filter = filter & filterBuilder.Gte(o => o.CreatedAt, dateFrom.Value);
             }
-
             if (dateTo.HasValue)
             {
                 filter = filter & filterBuilder.Lte(o => o.CreatedAt, dateTo.Value);
             }
 
-            // Apply pagination
+            // Fetch orders with pagination
             var orders = await _context
                 .Orders.Find(filter)
                 .Skip((pageNumber - 1) * pageSize)
                 .Limit(pageSize)
                 .ToListAsync();
 
-            // Fetch product details for all order items
+            // Get product details for the orders
             var productIds = orders
                 .SelectMany(o => o.Items.Select(i => i.ProductId))
                 .Distinct()
@@ -185,10 +203,13 @@ namespace ECommerceBackend.Service.Implementations
                 .Products.Find(p => productIds.Contains(p.Id) && p.IsActive)
                 .ToListAsync();
 
-            // Map the orders to response DTOs
+            // Map the orders to response DTOs with product details
             return orders.Select(order => OrderMapper.ToOrderResponseDTO(order, products)).ToList();
         }
 
+        /// <summary>
+        /// Retrieves vendor orders with optional filters and pagination.
+        /// </summary>
         public async Task<List<OrderResponseDTO>> GetVendorOrdersAsync(
             string vendorId,
             string status,
@@ -198,35 +219,34 @@ namespace ECommerceBackend.Service.Implementations
             int pageSize
         )
         {
+            // Build the query filter for the vendor's orders
             var filterBuilder = Builders<Order>.Filter;
             var filter =
                 filterBuilder.ElemMatch(o => o.Items, i => i.VendorId == vendorId)
-                & filterBuilder.Eq(o => o.IsDeleted, false); // Exclude soft-deleted orders
+                & filterBuilder.Eq(o => o.IsDeleted, false);
 
             // Apply filters based on the query parameters
             if (!string.IsNullOrEmpty(status))
             {
                 filter = filter & filterBuilder.Eq(o => o.Status, status);
             }
-
             if (dateFrom.HasValue)
             {
                 filter = filter & filterBuilder.Gte(o => o.CreatedAt, dateFrom.Value);
             }
-
             if (dateTo.HasValue)
             {
                 filter = filter & filterBuilder.Lte(o => o.CreatedAt, dateTo.Value);
             }
 
-            // Apply pagination
+            // Fetch orders with pagination
             var orders = await _context
                 .Orders.Find(filter)
                 .Skip((pageNumber - 1) * pageSize)
                 .Limit(pageSize)
                 .ToListAsync();
 
-            // Fetch product details for all order items
+            // Get product details for the orders
             var productIds = orders
                 .SelectMany(o => o.Items.Select(i => i.ProductId))
                 .Distinct()
@@ -235,44 +255,44 @@ namespace ECommerceBackend.Service.Implementations
                 .Products.Find(p => productIds.Contains(p.Id) && p.IsActive)
                 .ToListAsync();
 
-            // Filter items by vendor and map the orders to response DTOs
+            // Map the vendor orders to response DTOs with filtered product details
             return orders
                 .Select(order => OrderMapper.ToVendorOrderResponseDTO(order, vendorId, products))
                 .ToList();
         }
 
+        /// <summary>
+        /// Retrieves a specific order by its ID, ensuring role-based access control.
+        /// </summary>
         public async Task<OrderResponseDTO> GetOrderByIdAsync(
             string orderId,
             string userId,
             string userRole
         )
         {
-            // Find the order by ID and ensure it's not soft-deleted
+            // Build the filter to find the order by ID and ensure it's not soft-deleted
             var filter =
                 Builders<Order>.Filter.Eq(o => o.Id, orderId)
                 & Builders<Order>.Filter.Eq(o => o.IsDeleted, false);
 
+            // Fetch the order from the database
             var order = await _context.Orders.Find(filter).FirstOrDefaultAsync();
 
             if (order == null)
             {
-                return null;
+                return null; // Return null if the order doesn't exist
             }
 
-            // Check role-based access control
+            // Role-based access control
             if (userRole == "Administrator" || userRole == "CSR")
             {
                 // Admins/CSRs have full access to all orders
                 return OrderMapper.ToSingleOrderResponseDTO(order);
             }
-            else if (userRole == "Customer")
+            else if (userRole == "Customer" && order.CustomerId != userId)
             {
                 // Customers can only access their own orders
-                if (order.CustomerId != userId)
-                {
-                    return null; // Forbidden, customer trying to access another customer's order
-                }
-                return OrderMapper.ToSingleOrderResponseDTO(order);
+                return null;
             }
             else if (userRole == "Vendor")
             {
@@ -280,16 +300,17 @@ namespace ECommerceBackend.Service.Implementations
                 var vendorOrderItems = order.Items.Where(i => i.VendorId == userId).ToList();
                 if (!vendorOrderItems.Any())
                 {
-                    return null; // Forbidden, vendor has no products in this order
+                    return null; // Return null if the vendor has no products in this order
                 }
-                // Return the order details but only include the vendor's items
                 return OrderMapper.ToVendorOrderResponseDTO(order, userId);
             }
 
-            // If no valid role is found, return null
-            return null;
+            return null; // No access if the role doesn't match any valid criteria
         }
 
+        /// <summary>
+        /// Updates the status of a specific item in an order (accessible to Vendor/Admin/CSR).
+        /// </summary>
         public async Task<ResponseDTO<string>> UpdateOrderItemStatusAsync(
             string orderId,
             string itemId,
@@ -298,7 +319,7 @@ namespace ECommerceBackend.Service.Implementations
             UpdateOrderItemStatusDTO updateOrderItemStatusDTO
         )
         {
-            // Find the order by ID and ensure it's not soft-deleted
+            // Fetch the order by ID and ensure it's not soft-deleted
             var order = await _context
                 .Orders.Find(o => o.Id == orderId && !o.IsDeleted)
                 .FirstOrDefaultAsync();
@@ -308,7 +329,7 @@ namespace ECommerceBackend.Service.Implementations
                 return new ResponseDTO<string>(false, "Order not found", null);
             }
 
-            // Find the specific item in the order
+            // Find the specific order item by its ID
             var orderItem = order.Items.FirstOrDefault(i => i.ItemId == itemId);
 
             if (orderItem == null)
@@ -316,36 +337,26 @@ namespace ECommerceBackend.Service.Implementations
                 return new ResponseDTO<string>(false, "Order item not found", null);
             }
 
-            // Access control: ensure the vendor is only updating their own items
+            // Ensure that vendors can only update their own items
             if (userRole == "Vendor" && orderItem.VendorId != userId)
             {
-                return new ResponseDTO<string>(
-                    false,
-                    "You are not authorized to update this item",
-                    null
-                );
+                return new ResponseDTO<string>(false, "Unauthorized access to this item", null);
             }
 
-            // Vendors, Administrators, or CSR can update
-            if (userRole != "Vendor" && userRole != "Administrator" && userRole != "CSR")
-            {
-                return new ResponseDTO<string>(false, "Unauthorized access", null);
-            }
-
-            // Validate the new status (add more validation logic if necessary)
+            // Validate that a valid status has been provided
             if (string.IsNullOrEmpty(updateOrderItemStatusDTO.Status))
             {
                 return new ResponseDTO<string>(false, "Status is required", null);
             }
 
-            // Update the order item status and tracking number (if provided)
+            // Update the status and tracking number if provided
             orderItem.Status = updateOrderItemStatusDTO.Status;
             if (!string.IsNullOrEmpty(updateOrderItemStatusDTO.TrackingNumber))
             {
                 orderItem.TrackingNumber = updateOrderItemStatusDTO.TrackingNumber;
             }
 
-            // Update the overall order status if all items are delivered or canceled
+            // Update the overall order status based on individual item statuses
             if (order.Items.All(i => i.Status == "Delivered"))
             {
                 order.Status = "Delivered";
@@ -355,14 +366,15 @@ namespace ECommerceBackend.Service.Implementations
                 order.Status = "Cancelled";
             }
 
-            // Save changes to the order in the database
+            // Save the changes to the database
             await _context.Orders.ReplaceOneAsync(o => o.Id == orderId, order);
-
-            // Optionally, send notifications to the customer about the item status update
 
             return new ResponseDTO<string>(true, "Order item status updated successfully", null);
         }
 
+        /// <summary>
+        /// Cancels an order, ensuring that the user has the appropriate permissions.
+        /// </summary>
         public async Task<ResponseDTO<string>> CancelOrderAsync(
             string orderId,
             string userId,
@@ -370,7 +382,7 @@ namespace ECommerceBackend.Service.Implementations
             string reason = null
         )
         {
-            // Find the order by ID and ensure it's not already canceled or soft-deleted
+            // Fetch the order by ID and ensure it's not already canceled or soft-deleted
             var order = await _context
                 .Orders.Find(o => o.Id == orderId && !o.IsDeleted && o.Status != "Cancelled")
                 .FirstOrDefaultAsync();
@@ -380,17 +392,13 @@ namespace ECommerceBackend.Service.Implementations
                 return new ResponseDTO<string>(false, "Order not found or already canceled", null);
             }
 
-            // Check if the user is authorized to cancel the order
+            // Ensure that only the customer who placed the order can cancel it
             if (userRole == "Customer" && order.CustomerId != userId)
             {
-                return new ResponseDTO<string>(
-                    false,
-                    "You are not authorized to cancel this order",
-                    null
-                );
+                return new ResponseDTO<string>(false, "Unauthorized access to this order", null);
             }
 
-            // Only vendors cannot cancel orders, Admins/CSRs can cancel any order
+            // Ensure that vendors cannot cancel orders
             if (userRole == "Vendor")
             {
                 return new ResponseDTO<string>(
@@ -400,7 +408,7 @@ namespace ECommerceBackend.Service.Implementations
                 );
             }
 
-            // Check if the order is in a cancellable state (not already shipped or delivered)
+            // Ensure that orders in certain states (e.g., shipped or delivered) cannot be canceled
             if (order.Status == "Shipped" || order.Status == "Delivered")
             {
                 return new ResponseDTO<string>(
@@ -410,11 +418,11 @@ namespace ECommerceBackend.Service.Implementations
                 );
             }
 
-            // Soft-delete the order by marking it as deleted and updating the status to "Cancelled"
+            // Mark the order as canceled and soft-delete it
             order.IsDeleted = true;
             order.Status = "Cancelled";
 
-            // Optionally restock the inventory for each item in the order
+            // Restock the inventory for each item in the order
             foreach (var item in order.Items)
             {
                 await _context.Products.UpdateOneAsync(
@@ -423,22 +431,22 @@ namespace ECommerceBackend.Service.Implementations
                 );
             }
 
-            // Optionally process a refund if the payment was captured
+            // Optionally process a refund if the payment has been completed
             if (order.PaymentStatus == "Completed")
             {
                 // TODO: Integrate with payment gateway to process refunds
                 order.PaymentStatus = "Refunded";
             }
 
-            // Save the updated order to the database
+            // Save the canceled order to the database
             await _context.Orders.ReplaceOneAsync(o => o.Id == order.Id, order);
-
-            // Optionally send notifications to the customer and vendor about the cancellation
-            // TODO: Send email or push notifications
 
             return new ResponseDTO<string>(true, "Order canceled successfully", null);
         }
 
+        /// <summary>
+        /// Confirms the delivery of an order, updating its status to 'Delivered'.
+        /// </summary>
         public async Task<ResponseDTO<string>> ConfirmOrderDeliveryAsync(
             string orderId,
             string customerId
@@ -458,7 +466,7 @@ namespace ECommerceBackend.Service.Implementations
                 );
             }
 
-            // Check if the order is in a state that can be confirmed as delivered
+            // Check if the order is in a deliverable state
             if (order.Status != "Shipped" && order.Status != "Out for Delivery")
             {
                 return new ResponseDTO<string>(
@@ -468,11 +476,9 @@ namespace ECommerceBackend.Service.Implementations
                 );
             }
 
-            // Update the order status to 'Delivered'
+            // Mark the order and all its items as delivered
             order.Status = "Delivered";
             order.UpdatedAt = DateTime.UtcNow;
-
-            // Optionally, update each item status to 'Delivered'
             foreach (var item in order.Items)
             {
                 item.Status = "Delivered";
@@ -481,12 +487,12 @@ namespace ECommerceBackend.Service.Implementations
             // Save the updated order to the database
             await _context.Orders.ReplaceOneAsync(o => o.Id == order.Id, order);
 
-            // Optionally send notifications to vendors and administrators
-            // TODO: Send email or push notifications
-
             return new ResponseDTO<string>(true, "Order delivery confirmed successfully", null);
         }
 
+        /// <summary>
+        /// Adds an internal note to the order (Admins and CSRs only).
+        /// </summary>
         public async Task<ResponseDTO<string>> AddNoteToOrderAsync(
             string orderId,
             string userId,
@@ -504,18 +510,16 @@ namespace ECommerceBackend.Service.Implementations
                 return new ResponseDTO<string>(false, "Order not found", null);
             }
 
-            // Create the order note
+            // Add a note to the order's internal notes
             var orderNote = new OrderNote
             {
                 Note = noteContent,
                 AddedBy = userId,
                 AddedAt = DateTime.UtcNow,
             };
-
-            // Add the note to the internalNotes collection
             order.InternalNotes.Add(orderNote);
 
-            // Update the order in the database
+            // Save the updated order to the database
             await _context.Orders.ReplaceOneAsync(o => o.Id == order.Id, order);
 
             return new ResponseDTO<string>(true, "Note added successfully", null);

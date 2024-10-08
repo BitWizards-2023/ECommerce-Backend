@@ -1,3 +1,12 @@
+/*
+ * Author: Sudesh Sachintha Bandara
+ * Description: This file contains the implementation of the CartService class,
+ * which provides functionality for managing the shopping cart in the
+ * ECommerceBackend application. It includes methods for adding, updating,
+ * and removing items in the cart, applying discounts, and proceeding to checkout.
+ * Date Created: 2024/09/18
+ */
+
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -15,14 +24,21 @@ namespace ECommerceBackend.Service.Implementations
     {
         private readonly MongoDbContext _context;
 
+        /// <summary>
+        /// Constructor for CartService, injecting MongoDB context.
+        /// </summary>
+        /// <param name="context">The MongoDB context</param>
         public CartService(MongoDbContext context)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
-        // Retrieve the current user's cart
+        /// <summary>
+        /// Retrieve the current user's cart. If no cart exists, creates a new one.
+        /// </summary>
         public async Task<CartResponseDTO> GetCartAsync(string userId)
         {
+            // Fetch the user's cart or create a new one if it doesn't exist
             var cart = await _context
                 .Carts.Find(c => c.UserId == userId && !c.IsCheckedOut)
                 .FirstOrDefaultAsync();
@@ -41,12 +57,15 @@ namespace ECommerceBackend.Service.Implementations
             return CartMapper.ToCartResponseDTO(cart);
         }
 
-        // Add or update items in the cart with stock validation
+        /// <summary>
+        /// Add or update items in the cart with stock validation.
+        /// </summary>
         public async Task<CartResponseDTO> AddOrUpdateCartItemAsync(
             string userId,
             CartItemRequestDTO cartItemRequestDTO
         )
         {
+            // Fetch the user's cart or create a new one if it doesn't exist
             var cart = await _context
                 .Carts.Find(c => c.UserId == userId && !c.IsCheckedOut)
                 .FirstOrDefaultAsync();
@@ -61,6 +80,7 @@ namespace ECommerceBackend.Service.Implementations
                 };
             }
 
+            // Validate the product and its stock
             var product = await _context
                 .Products.Find(p => p.Id == cartItemRequestDTO.ProductId && p.IsActive)
                 .FirstOrDefaultAsync();
@@ -79,6 +99,7 @@ namespace ECommerceBackend.Service.Implementations
                 );
             }
 
+            // Add or update the cart item
             var existingItem = cart.Items.FirstOrDefault(i =>
                 i.ProductId == cartItemRequestDTO.ProductId
             );
@@ -100,13 +121,16 @@ namespace ECommerceBackend.Service.Implementations
             return CartMapper.ToCartResponseDTO(cart);
         }
 
-        // Update a specific cart item's quantity or options
+        /// <summary>
+        /// Update a specific cart item's quantity or options.
+        /// </summary>
         public async Task<CartResponseDTO> UpdateCartItemAsync(
             string userId,
             string cartItemId,
             UpdateCartItemRequestDTO updateCartItemRequestDTO
         )
         {
+            // Fetch the user's cart
             var cart = await _context
                 .Carts.Find(c => c.UserId == userId && !c.IsCheckedOut)
                 .FirstOrDefaultAsync();
@@ -115,6 +139,7 @@ namespace ECommerceBackend.Service.Implementations
                 throw new InvalidOperationException("Cart not found.");
             }
 
+            // Validate the cart item
             var cartItem = cart.Items.FirstOrDefault(i => i.CartItemId == cartItemId);
             if (cartItem == null)
             {
@@ -132,6 +157,7 @@ namespace ECommerceBackend.Service.Implementations
                 );
             }
 
+            // Update the cart item details
             cartItem.Quantity = updateCartItemRequestDTO.Quantity;
             cartItem.SelectedOptions = updateCartItemRequestDTO.SelectedOptions;
             cart.UpdatedAt = DateTime.UtcNow;
@@ -140,9 +166,12 @@ namespace ECommerceBackend.Service.Implementations
             return CartMapper.ToCartResponseDTO(cart);
         }
 
-        // Remove an item from the cart
+        /// <summary>
+        /// Remove an item from the cart.
+        /// </summary>
         public async Task<bool> RemoveCartItemAsync(string userId, string cartItemId)
         {
+            // Fetch the user's cart
             var cart = await _context
                 .Carts.Find(c => c.UserId == userId && !c.IsCheckedOut)
                 .FirstOrDefaultAsync();
@@ -151,12 +180,14 @@ namespace ECommerceBackend.Service.Implementations
                 throw new InvalidOperationException("Cart not found.");
             }
 
+            // Validate the cart item
             var cartItem = cart.Items.FirstOrDefault(i => i.CartItemId == cartItemId);
             if (cartItem == null)
             {
                 throw new InvalidOperationException($"Cart item with ID {cartItemId} not found.");
             }
 
+            // Remove the item from the cart
             cart.Items.Remove(cartItem);
             cart.UpdatedAt = DateTime.UtcNow;
 
@@ -164,9 +195,12 @@ namespace ECommerceBackend.Service.Implementations
             return true;
         }
 
-        // Clear the entire cart
+        /// <summary>
+        /// Clear the entire cart.
+        /// </summary>
         public async Task<bool> ClearCartAsync(string userId)
         {
+            // Fetch the user's cart
             var cart = await _context
                 .Carts.Find(c => c.UserId == userId && !c.IsCheckedOut)
                 .FirstOrDefaultAsync();
@@ -175,6 +209,7 @@ namespace ECommerceBackend.Service.Implementations
                 throw new InvalidOperationException("Cart not found.");
             }
 
+            // Clear the cart items
             cart.Items.Clear();
             cart.UpdatedAt = DateTime.UtcNow;
 
@@ -182,12 +217,15 @@ namespace ECommerceBackend.Service.Implementations
             return true;
         }
 
-        // Apply a discount to the cart
+        /// <summary>
+        /// Apply a discount to the cart.
+        /// </summary>
         public async Task<CartResponseDTO> ApplyDiscountAsync(
             string userId,
             ApplyDiscountRequestDTO applyDiscountRequestDTO
         )
         {
+            // Fetch the user's cart
             var cart = await _context
                 .Carts.Find(c => c.UserId == userId && !c.IsCheckedOut)
                 .FirstOrDefaultAsync();
@@ -196,7 +234,7 @@ namespace ECommerceBackend.Service.Implementations
                 throw new InvalidOperationException("Cart not found.");
             }
 
-            // For simplicity, assume a flat 10% discount for valid codes
+            // Apply the discount code
             if (applyDiscountRequestDTO.DiscountCode == "DISCOUNT10")
             {
                 cart.DiscountCode = applyDiscountRequestDTO.DiscountCode;
@@ -212,9 +250,12 @@ namespace ECommerceBackend.Service.Implementations
             return CartMapper.ToCartResponseDTO(cart);
         }
 
-        // Proceed to checkout
+        /// <summary>
+        /// Proceed to checkout for the current user's cart.
+        /// </summary>
         public async Task<CartResponseDTO> CheckoutAsync(string userId)
         {
+            // Fetch the user's cart
             var cart = await _context
                 .Carts.Find(c => c.UserId == userId && !c.IsCheckedOut)
                 .FirstOrDefaultAsync();
@@ -230,6 +271,7 @@ namespace ECommerceBackend.Service.Implementations
                 );
             }
 
+            // Mark the cart as checked out
             cart.IsCheckedOut = true;
             cart.UpdatedAt = DateTime.UtcNow;
 
