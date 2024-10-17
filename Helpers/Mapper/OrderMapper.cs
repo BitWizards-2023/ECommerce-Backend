@@ -20,7 +20,7 @@ namespace ECommerceBackend.Helpers.Mapper
             {
                 OrderNumber = GenerateOrderNumber(),
                 CustomerId = customerId,
-                Items = orderItems, // Pass the pre-constructed order items with vendorId
+                Items = orderItems,
                 TotalAmount = totalAmount,
                 ShippingAddress = new Address
                 {
@@ -83,6 +83,7 @@ namespace ECommerceBackend.Helpers.Mapper
 
             return new OrderItemDTO
             {
+                ItemId = orderItem.ItemId,
                 ProductId = orderItem.ProductId,
                 VendorId = orderItem.VendorId,
                 Quantity = orderItem.Quantity,
@@ -165,6 +166,7 @@ namespace ECommerceBackend.Helpers.Mapper
         {
             return new OrderItemDTO
             {
+                ItemId = orderItem.ItemId,
                 ProductId = orderItem.ProductId,
                 VendorId = orderItem.VendorId,
                 Quantity = orderItem.Quantity,
@@ -193,6 +195,7 @@ namespace ECommerceBackend.Helpers.Mapper
                 Items = order
                     .Items.Select(item => new OrderItemDTO
                     {
+                        ItemId = item.ItemId,
                         ProductId = item.ProductId,
                         VendorId = item.VendorId,
                         Quantity = item.Quantity,

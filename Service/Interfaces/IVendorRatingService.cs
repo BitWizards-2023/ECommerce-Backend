@@ -12,5 +12,7 @@ namespace ECommerceBackend.Services.Interfaces
         );
         Task<bool> ApproveRatingAsync(string ratingId);
         Task<VendorProfileResponseDTO> GetVendorProfileAsync(string vendorId);
+
+        Task<List<VendorProfileResponseDTO>> GetVendorsAsync();
     }
 }
