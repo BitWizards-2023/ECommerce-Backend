@@ -57,9 +57,7 @@ namespace ECommerceBackend.Services.Implementations
                 Rating = ratingDTO.Rating,
                 Comment = ratingDTO.Comment,
                 CreatedAt = DateTime.UtcNow,
-                IsApproved =
-                    false // Needs moderation approval before being visible
-                ,
+                IsApproved = false,
             };
 
             await _context.VendorRatings.InsertOneAsync(rating);
@@ -75,7 +73,6 @@ namespace ECommerceBackend.Services.Implementations
 
         public async Task<VendorProfileResponseDTO> GetVendorProfileAsync(string vendorId)
         {
-            // Get vendor details (from User model)
             var vendor = await _context
                 .Users.Find(u => u.Id == vendorId && u.Role == "Vendor")
                 .FirstOrDefaultAsync();
@@ -84,37 +81,44 @@ namespace ECommerceBackend.Services.Implementations
                 throw new InvalidOperationException($"Vendor with ID {vendorId} not found.");
             }
 
-            // Get approved ratings and comments for the vendor
             var ratings = await _context
                 .VendorRatings.Find(r => r.VendorId == vendorId && r.IsApproved)
                 .ToListAsync();
             var averageRating = ratings.Any() ? ratings.Average(r => r.Rating) : 0;
             var totalReviews = ratings.Count;
 
-            // Build the vendor profile response with detailed user info and ratings
-            return new VendorProfileResponseDTO
+            return VendorMapper.ToVendorProfileResponseDTO(
+                vendor,
+                averageRating,
+                totalReviews,
+                ratings
+            );
+        }
+
+        public async Task<List<VendorProfileResponseDTO>> GetVendorsAsync()
+        {
+            var vendors = await _context.Users.Find(u => u.Role == "Vendor").ToListAsync();
+            var vendorList = new List<VendorProfileResponseDTO>();
+
+            foreach (var vendor in vendors)
             {
-                VendorId = vendor.Id,
-                UserName = vendor.Username,
-                Email = vendor.Email,
-                FirstName = vendor.FirstName,
-                LastName = vendor.LastName,
-                Address = new AddressDTO
-                {
-                    Street = vendor.Address.Street,
-                    City = vendor.Address.City,
-                    State = vendor.Address.State,
-                    PostalCode = vendor.Address.PostalCode,
-                    Country = vendor.Address.Country,
-                },
-                PhoneNumber = vendor.PhoneNumber,
-                ProfilePic = vendor.ProfilePic,
-                AverageRating = averageRating,
-                TotalReviews = totalReviews,
-                Ratings = ratings
-                    .Select(r => VendorRatingMapper.ToVendorRatingResponseDTO(r))
-                    .ToList(), // Fixed the Select issue
-            };
+                var ratings = await _context
+                    .VendorRatings.Find(r => r.VendorId == vendor.Id && r.IsApproved)
+                    .ToListAsync();
+                var averageRating = ratings.Any() ? ratings.Average(r => r.Rating) : 0;
+                var totalReviews = ratings.Count;
+
+                vendorList.Add(
+                    VendorMapper.ToVendorProfileResponseDTO(
+                        vendor,
+                        averageRating,
+                        totalReviews,
+                        ratings
+                    )
+                );
+            }
+
+            return vendorList;
         }
     }
 }

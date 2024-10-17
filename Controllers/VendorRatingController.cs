@@ -69,14 +69,38 @@ namespace ECommerceBackend.Controllers
         /// </summary>
         /// <param name="vendorId">The ID of the vendor</param>
         /// <returns>Vendor profile with ratings</returns>
-        [HttpGet("profile/{vendorId}")]
+        // Endpoint to retrieve vendor profile details with ratings
+        [HttpGet("{vendorId}")]
         public async Task<IActionResult> GetVendorProfile(string vendorId)
         {
-            var vendorProfile = await _vendorRatingService.GetVendorProfileAsync(vendorId);
-            if (vendorProfile == null)
-                return NotFound(new { message = "Vendor not found" });
+            try
+            {
+                var vendorProfile = await _vendorRatingService.GetVendorProfileAsync(vendorId);
+                return Ok(vendorProfile);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
 
-            return Ok(vendorProfile);
+        // Endpoint to retrieve a list of vendors
+        [HttpGet("list")]
+        public async Task<IActionResult> GetVendors()
+        {
+            try
+            {
+                var vendors = await _vendorRatingService.GetVendorsAsync();
+                return Ok(vendors);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
     }
 }
