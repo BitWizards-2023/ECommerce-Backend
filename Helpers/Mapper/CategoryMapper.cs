@@ -29,6 +29,7 @@ namespace ECommerceBackend.Helpers.Mapper
                 IsActive = dto.IsActive,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
+                ImageUrl = dto.ImageUrl,
             };
         }
 
