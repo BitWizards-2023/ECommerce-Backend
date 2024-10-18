@@ -388,6 +388,17 @@ namespace ECommerceBackend.Service.Implementations
             await _context.Orders.ReplaceOneAsync(o => o.Id == orderId, order);
 
             // Optionally, send notifications to the customer about the item status update
+            // Send notification to the customer about the status update
+            var customer = await _context
+                .Users.Find(u => u.Id == order.CustomerId)
+                .FirstOrDefaultAsync();
+            if (customer != null && !string.IsNullOrEmpty(customer.FcmToken))
+            {
+                string title = "Order Status Updated";
+                string body =
+                    $"Hello {customer.FirstName}, the status of your order #{order.OrderNumber} has been updated to {order.Status}.";
+                await _notificationService.SendNotificationAsync(customer.FcmToken, title, body);
+            }
 
             return new ResponseDTO<string>(true, "Order item status updated successfully", null);
         }
@@ -462,8 +473,19 @@ namespace ECommerceBackend.Service.Implementations
             // Save the updated order to the database
             await _context.Orders.ReplaceOneAsync(o => o.Id == order.Id, order);
 
-            // Optionally send notifications to the customer and vendor about the cancellation
-            // TODO: Send email or push notifications
+            // Optionally, notify vendors about the cancellation
+            var vendorIds = order.Items.Select(i => i.VendorId).Distinct().ToList();
+            foreach (var vendorId in vendorIds)
+            {
+                var vendor = await _context.Users.Find(u => u.Id == vendorId).FirstOrDefaultAsync();
+                if (vendor != null && !string.IsNullOrEmpty(vendor.FcmToken))
+                {
+                    string title = "Order Canceled";
+                    string body =
+                        $"Hello {vendor.FirstName}, order #{order.OrderNumber} containing your products has been canceled.";
+                    await _notificationService.SendNotificationAsync(vendor.FcmToken, title, body);
+                }
+            }
 
             return new ResponseDTO<string>(true, "Order canceled successfully", null);
         }
@@ -510,8 +532,15 @@ namespace ECommerceBackend.Service.Implementations
             // Save the updated order to the database
             await _context.Orders.ReplaceOneAsync(o => o.Id == order.Id, order);
 
-            // Optionally send notifications to vendors and administrators
-            // TODO: Send email or push notifications
+            // Send notification to the customer about the delivery confirmation
+            var customer = await _context.Users.Find(u => u.Id == customerId).FirstOrDefaultAsync();
+            if (customer != null && !string.IsNullOrEmpty(customer.FcmToken))
+            {
+                string title = "Delivery Confirmed";
+                string body =
+                    $"Hello {customer.FirstName}, your order #{order.OrderNumber} has been delivered successfully.";
+                await _notificationService.SendNotificationAsync(customer.FcmToken, title, body);
+            }
 
             return new ResponseDTO<string>(true, "Order delivery confirmed successfully", null);
         }

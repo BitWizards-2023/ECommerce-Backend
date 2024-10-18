@@ -18,7 +18,7 @@ namespace ECommerceBackend.Controllers
             _userService = userService ?? throw new ArgumentNullException(nameof(userService));
         }
 
-        [Authorize(Policy = "AdminPolicy")]
+        [Authorize(Policy = "AdminOrCSRPolicy")]
         [HttpGet("list")]
         public IActionResult GetUsers()
         {
@@ -128,7 +128,7 @@ namespace ECommerceBackend.Controllers
             }
         }
 
-        [Authorize(Policy = "AdminPolicy")]
+        [Authorize(Policy = "AdminOrCSRPolicy")]
         [HttpPatch("{id}/activate")]
         public IActionResult ActivateUser(string id)
         {
@@ -154,7 +154,7 @@ namespace ECommerceBackend.Controllers
             }
         }
 
-        [Authorize(Policy = "AdminPolicy")]
+        [Authorize(Policy = "AdminOrCSRPolicy")]
         [HttpPatch("{id}/approve")]
         public IActionResult ApproveUser(string id)
         {
