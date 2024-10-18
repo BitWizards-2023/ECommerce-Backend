@@ -14,5 +14,6 @@ namespace ECommerceBackend.Services.Interfaces
         Task<VendorProfileResponseDTO> GetVendorProfileAsync(string vendorId);
 
         Task<List<VendorProfileResponseDTO>> GetVendorsAsync();
+        Task<List<VendorProfileResponseDTO>> GetAllVendorsAsync();
     }
 }

@@ -46,6 +46,7 @@ namespace ECommerceBackend.Helpers.Mapper
                 Comment = vendorRating.Comment,
                 Rating = vendorRating.Rating,
                 CreatedAt = vendorRating.CreatedAt,
+                isApproved = vendorRating.IsApproved,
             };
         }
     }

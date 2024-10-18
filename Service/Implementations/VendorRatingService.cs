@@ -120,5 +120,31 @@ namespace ECommerceBackend.Services.Implementations
 
             return vendorList;
         }
+
+        public async Task<List<VendorProfileResponseDTO>> GetAllVendorsAsync()
+        {
+            var vendors = await _context.Users.Find(u => u.Role == "Vendor").ToListAsync();
+            var vendorList = new List<VendorProfileResponseDTO>();
+
+            foreach (var vendor in vendors)
+            {
+                var ratings = await _context
+                    .VendorRatings.Find(r => r.VendorId == vendor.Id)
+                    .ToListAsync();
+                var averageRating = ratings.Any() ? ratings.Average(r => r.Rating) : 0;
+                var totalReviews = ratings.Count;
+
+                vendorList.Add(
+                    VendorMapper.ToVendorProfileResponseDTO(
+                        vendor,
+                        averageRating,
+                        totalReviews,
+                        ratings
+                    )
+                );
+            }
+
+            return vendorList;
+        }
     }
 }
