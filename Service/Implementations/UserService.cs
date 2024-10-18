@@ -114,5 +114,21 @@ namespace ECommerceBackend.Data.Repository.Implementations
             var result = _context.Users.UpdateOne(u => u.Id == id, updateDefinition);
             return result.ModifiedCount > 0;
         }
+
+        public bool UpdateFcmToken(string userId, string fcmToken)
+        {
+            if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(fcmToken))
+            {
+                return false;
+            }
+
+            var updateDefinition = Builders<User>
+                .Update.Set(u => u.FcmToken, fcmToken)
+                .Set(u => u.UpdatedAt, DateTime.UtcNow);
+
+            var result = _context.Users.UpdateOne(u => u.Id == userId, updateDefinition);
+
+            return result.ModifiedCount > 0;
+        }
     }
 }

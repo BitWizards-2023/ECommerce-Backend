@@ -12,4 +12,6 @@ public interface IUserServices
     bool DeleteUser(string id);
     bool ActivateUser(string id);
     bool ApproveUser(string id);
+
+    bool UpdateFcmToken(string userId, string fcmToken);
 }

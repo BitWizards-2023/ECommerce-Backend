@@ -459,7 +459,7 @@ namespace ECommerceBackend.Service.Implementations
             }
 
             // Check if the order is in a state that can be confirmed as delivered
-            if (order.Status != "Shipped" && order.Status != "Out for Delivery")
+            if (order.Status != "Shipped" && order.Status != "Delivered")
             {
                 return new ResponseDTO<string>(
                     false,
@@ -469,13 +469,13 @@ namespace ECommerceBackend.Service.Implementations
             }
 
             // Update the order status to 'Delivered'
-            order.Status = "Delivered";
+            order.Status = "Confirm Delivered";
             order.UpdatedAt = DateTime.UtcNow;
 
             // Optionally, update each item status to 'Delivered'
             foreach (var item in order.Items)
             {
-                item.Status = "Delivered";
+                item.Status = "Confirm Delivered";
             }
 
             // Save the updated order to the database
