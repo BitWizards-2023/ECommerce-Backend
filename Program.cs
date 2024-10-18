@@ -50,6 +50,7 @@ builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IVendorRatingService, VendorRatingService>();
 builder.Services.AddSingleton<FirebaseUtils>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 
 // Add controllers
 // Registers MVC controllers for handling HTTP requests

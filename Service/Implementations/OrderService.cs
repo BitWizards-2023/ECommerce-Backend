@@ -6,6 +6,7 @@ using ECommerceBackend.Helpers.Mapper;
 using ECommerceBackend.Models;
 using ECommerceBackend.Models.Entities;
 using ECommerceBackend.Service.Interfaces;
+using ECommerceBackend.Services.Implementations;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
@@ -14,10 +15,13 @@ namespace ECommerceBackend.Service.Implementations
     public class OrderService : IOrderService
     {
         private readonly MongoDbContext _context;
+        private readonly INotificationService _notificationService;
 
-        public OrderService(MongoDbContext context)
+        public OrderService(MongoDbContext context, INotificationService notificationService)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
+            _notificationService =
+                notificationService ?? throw new ArgumentNullException(nameof(notificationService));
         }
 
         public async Task<OrderResponseDTO> CreateOrderAsync(
@@ -79,6 +83,31 @@ namespace ECommerceBackend.Service.Implementations
 
             // Save the order in the database
             await _context.Orders.InsertOneAsync(order);
+
+            // Fetch the customer to get the FCM token
+            var customer = await _context.Users.Find(u => u.Id == customerId).FirstOrDefaultAsync();
+            if (customer != null && !string.IsNullOrEmpty(customer.FcmToken))
+            {
+                string title = "Order Placed Successfully!";
+                string body =
+                    $"Hello {customer.FirstName}, your order #{order.OrderNumber} has been placed successfully.";
+                await _notificationService.SendNotificationAsync(customer.FcmToken, title, body);
+            }
+
+            // Notify each vendor about the new order
+            var vendorGroups = orderItems.GroupBy(item => item.VendorId);
+            foreach (var vendorGroup in vendorGroups)
+            {
+                var vendorId = vendorGroup.Key;
+                var vendor = await _context.Users.Find(u => u.Id == vendorId).FirstOrDefaultAsync();
+                if (vendor != null && !string.IsNullOrEmpty(vendor.FcmToken))
+                {
+                    string title = "New Order Received";
+                    string body =
+                        $"Hello {vendor.FirstName}, you have received a new order #{order.OrderNumber} containing your products.";
+                    await _notificationService.SendNotificationAsync(vendor.FcmToken, title, body);
+                }
+            }
 
             // Pass products instead of orderItems to the response DTO
             return OrderMapper.ToOrderResponseDTO(order, products);
