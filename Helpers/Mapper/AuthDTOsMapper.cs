@@ -47,6 +47,7 @@ namespace ECommerceBackend.Helpers.Mapper
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
                 IsDeleted = false,
+                IsActive = registerRequest.IsActive,
 
                 FcmToken = string.IsNullOrWhiteSpace(registerRequest.FcmToken)
                     ? string.Empty

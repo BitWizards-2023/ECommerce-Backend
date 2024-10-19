@@ -1,10 +1,14 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using ECommerceBackend.Data.Contexts;
 using ECommerceBackend.DTOs.Request.Product;
 using ECommerceBackend.DTOs.Response.Product;
 using ECommerceBackend.Helpers.Mapper;
-using ECommerceBackend.Models;
 using ECommerceBackend.Models.Entities;
 using ECommerceBackend.Service.Interfaces;
+using Microsoft.Extensions.Configuration;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
@@ -80,7 +84,9 @@ namespace ECommerceBackend.Service.Implementations
         // Method to get a product by ID asynchronously
         public async Task<ProductResponseDTO> GetProductByIdAsync(string id)
         {
-            var product = await _context.Products.Find(p => p.Id == id).FirstOrDefaultAsync();
+            var product = await _context
+                .Products.Find(p => p.Id == id && p.IsActive)
+                .FirstOrDefaultAsync();
             return product != null ? ProductMapper.ToProductResponseDTO(product) : null;
         }
 
@@ -134,6 +140,11 @@ namespace ECommerceBackend.Service.Implementations
         // Method to delete (soft delete) a product asynchronously
         public async Task<bool> DeleteProductAsync(string id, string vendorId)
         {
+            var canDelete = await CanDeleteProductAsync(id, vendorId);
+
+            if (!canDelete)
+                return false;
+
             var updateDefinition = Builders<Product>.Update.Set(p => p.IsActive, false);
             var result = await _context.Products.UpdateOneAsync(
                 p => p.Id == id && p.VendorId == vendorId,
@@ -162,6 +173,73 @@ namespace ECommerceBackend.Service.Implementations
                 updateDefinition
             );
             return result.ModifiedCount > 0;
+        }
+
+        // **New Methods for Inventory Management**
+
+        // Method to get the stock level of a specific product
+        public async Task<int> GetProductStockLevelAsync(string productId)
+        {
+            var product = await _context
+                .Products.Find(p => p.Id == productId && p.IsActive)
+                .FirstOrDefaultAsync();
+
+            return product?.StockLevel ?? 0;
+        }
+
+        // Method to get the stock levels of all products
+        public async Task<List<ProductStockResponseDTO>> GetAllProductStockLevelsAsync()
+        {
+            var products = await _context
+                .Products.Find(p => p.IsActive)
+                .Project(p => new ProductStockResponseDTO
+                {
+                    ProductId = p.Id,
+                    StockLevel = p.StockLevel,
+                })
+                .ToListAsync();
+
+            return products;
+        }
+
+        // Method to update the stock level of a product
+        public async Task<bool> UpdateProductStockLevelAsync(
+            string productId,
+            int stockLevel,
+            string vendorId
+        )
+        {
+            var update = Builders<Product>
+                .Update.Set(p => p.StockLevel, stockLevel)
+                .Set(p => p.UpdatedAt, DateTime.UtcNow);
+
+            var result = await _context.Products.UpdateOneAsync(
+                p => p.Id == productId && p.VendorId == vendorId,
+                update
+            );
+
+            return result.ModifiedCount > 0;
+        }
+
+        // Method to check if a product can be deleted (not part of any pending orders)
+        public async Task<bool> CanDeleteProductAsync(string productId, string vendorId)
+        {
+            // Check if the product exists and belongs to the vendor
+            var productExists = await _context
+                .Products.Find(p => p.Id == productId && p.VendorId == vendorId && p.IsActive)
+                .AnyAsync();
+
+            if (!productExists)
+                return false;
+
+            // Check if the product is part of any pending orders
+            var pendingOrders = await _context
+                .Orders.Find(o =>
+                    o.Items.Any(i => i.ProductId == productId) && o.Status == "Processing"
+                )
+                .AnyAsync();
+
+            return !pendingOrders;
         }
     }
 }

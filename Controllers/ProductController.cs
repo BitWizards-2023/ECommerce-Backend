@@ -158,5 +158,38 @@ namespace ECommerceBackend.Controllers
                     new ResponseDTO<string>(false, "Product not found or deactivation failed", null)
                 );
         }
+
+        [HttpGet("{productId}/stock-level")]
+        public async Task<IActionResult> GetProductStockLevel(string productId)
+        {
+            var stockLevel = await _productService.GetProductStockLevelAsync(productId);
+            return Ok(new { productId, stockLevel });
+        }
+
+        [HttpGet("stock-levels")]
+        public async Task<IActionResult> GetAllProductStockLevels()
+        {
+            var stockLevels = await _productService.GetAllProductStockLevelsAsync();
+            return Ok(stockLevels);
+        }
+
+        [HttpPut("{productId}/stock-level")]
+        public async Task<IActionResult> UpdateProductStockLevel(
+            string productId,
+            [FromBody] UpdateStockLevelRequestDTO request
+        )
+        {
+            var vendorId = User.FindFirst("id").Value; // Assuming JWT authentication
+            var result = await _productService.UpdateProductStockLevelAsync(
+                productId,
+                request.StockLevel,
+                vendorId
+            );
+
+            if (result)
+                return Ok(new { message = "Stock level updated successfully." });
+            else
+                return BadRequest(new { message = "Failed to update stock level." });
+        }
     }
 }

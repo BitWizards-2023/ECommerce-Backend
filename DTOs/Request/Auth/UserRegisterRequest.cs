@@ -17,4 +17,6 @@ public class UserRegisterRequest
     public string Role { get; set; } = string.Empty;
     public string Profile_pic { get; set; } = string.Empty;
     public string FcmTokens { get; set; } = string.Empty;
+
+    public bool IsActive { get; set; }
 }

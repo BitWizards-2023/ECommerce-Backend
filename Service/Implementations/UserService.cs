@@ -75,7 +75,7 @@ namespace ECommerceBackend.Data.Repository.Implementations
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
                 IsDeleted = false,
-                IsActive = false,
+                IsActive = userRegisterRequest.IsActive ? userRegisterRequest.IsActive : true,
             };
 
             _context.Users.InsertOne(user);
