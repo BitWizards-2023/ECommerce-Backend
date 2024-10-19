@@ -5,7 +5,7 @@ namespace ECommerceBackend.Data.Repository.Interfaces;
 
 public interface IUserServices
 {
-    List<UserResponseDTO> GetUserList();
+    List<UserResponseDTO> GetUserList(string role = null);
     UserResponseDTO GetUserById(string id);
     UserResponseDTO CreateUser(UserRegisterRequest userRegisterRequest);
     bool UpdateUser(string id, UserUpdateRequest userUpdateDTO);

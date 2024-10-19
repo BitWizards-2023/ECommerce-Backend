@@ -20,11 +20,11 @@ namespace ECommerceBackend.Controllers
 
         [Authorize(Policy = "AdminOrCSRPolicy")]
         [HttpGet("list")]
-        public IActionResult GetUsers()
+        public IActionResult GetUsers([FromQuery] string role = null)
         {
             try
             {
-                var users = _userService.GetUserList();
+                var users = _userService.GetUserList(role);
 
                 if (users == null || !users.Any())
                 {
