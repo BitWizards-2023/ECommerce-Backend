@@ -72,6 +72,16 @@ namespace ECommerceBackend.Helpers.Mapper
                 PaymentStatus = order.PaymentStatus,
                 CreatedAt = order.CreatedAt,
                 Items = order.Items.Select(item => ToOrderItemDTO(item, products)).ToList(),
+
+                // Correctly mapping internal notes
+                InternalNotes = order
+                    .InternalNotes.Select(note => new OrderNoteDTO
+                    {
+                        Note = note.Note,
+                        AddedBy = note.AddedBy,
+                        AddedAt = note.AddedAt,
+                    })
+                    .ToList(),
             };
         }
 
