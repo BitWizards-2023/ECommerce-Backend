@@ -30,9 +30,16 @@ namespace ECommerceBackend.Data.Repository.Implementations
         }
 
         // Retrieves a list of all users from the database and maps them to UserResponseDTO objects
-        public List<UserResponseDTO> GetUserList()
+        public List<UserResponseDTO> GetUserList(string role = null)
         {
-            var users = _context.Users.Find(FilterDefinition<User>.Empty).ToList();
+            var filter = Builders<User>.Filter.Empty; // Default to no filter
+
+            if (!string.IsNullOrWhiteSpace(role))
+            {
+                filter = Builders<User>.Filter.Eq(u => u.Role, role);
+            }
+
+            var users = _context.Users.Find(filter).ToList();
             return users.Select(DtoMapper.ToUserResponseDTO).ToList();
         }
 
@@ -112,6 +119,22 @@ namespace ECommerceBackend.Data.Repository.Implementations
         {
             var updateDefinition = Builders<User>.Update.Set(u => u.IsActive, true);
             var result = _context.Users.UpdateOne(u => u.Id == id, updateDefinition);
+            return result.ModifiedCount > 0;
+        }
+
+        public bool UpdateFcmToken(string userId, string fcmToken)
+        {
+            if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(fcmToken))
+            {
+                return false;
+            }
+
+            var updateDefinition = Builders<User>
+                .Update.Set(u => u.FcmToken, fcmToken)
+                .Set(u => u.UpdatedAt, DateTime.UtcNow);
+
+            var result = _context.Users.UpdateOne(u => u.Id == userId, updateDefinition);
+
             return result.ModifiedCount > 0;
         }
     }

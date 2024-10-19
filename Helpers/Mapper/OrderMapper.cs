@@ -72,6 +72,15 @@ namespace ECommerceBackend.Helpers.Mapper
                 PaymentStatus = order.PaymentStatus,
                 CreatedAt = order.CreatedAt,
                 Items = order.Items.Select(item => ToOrderItemDTO(item, products)).ToList(),
+
+                InternalNotes = order
+                    .InternalNotes.Select(note => new OrderNoteDTO
+                    {
+                        Note = note.Note,
+                        AddedBy = note.AddedBy,
+                        AddedAt = note.AddedAt,
+                    })
+                    .ToList(),
             };
         }
 
@@ -127,6 +136,15 @@ namespace ECommerceBackend.Helpers.Mapper
                 Items = order
                     .Items.Where(item => item.VendorId == vendorId) // Only include items for this vendor
                     .Select(item => ToOrderItemDTO(item, products))
+                    .ToList(),
+
+                InternalNotes = order
+                    .InternalNotes.Select(note => new OrderNoteDTO
+                    {
+                        Note = note.Note,
+                        AddedBy = note.AddedBy,
+                        AddedAt = note.AddedAt,
+                    })
                     .ToList(),
             };
         }

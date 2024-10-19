@@ -42,10 +42,12 @@ namespace ECommerceBackend.Helpers.Mapper
         {
             return new VendorRatingResponseDTO
             {
+                Id = vendorRating.Id,
                 CustomerId = vendorRating.CustomerId,
                 Comment = vendorRating.Comment,
                 Rating = vendorRating.Rating,
                 CreatedAt = vendorRating.CreatedAt,
+                isApproved = vendorRating.IsApproved,
             };
         }
     }

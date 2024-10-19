@@ -16,5 +16,7 @@ namespace ECommerceBackend.DTOs.Response.Auth
         public string Role { get; set; } = string.Empty;
         public string Profile_pic { get; set; } = string.Empty;
         public string FcmToken { get; set; } = string.Empty;
+
+        public bool IsActive { get; set; }
     }
 }

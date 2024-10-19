@@ -102,5 +102,20 @@ namespace ECommerceBackend.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
+
+        // Endpoint to retrieve a list of vendors
+        [HttpGet("admin/list")]
+        public async Task<IActionResult> GetAllVendors()
+        {
+            try
+            {
+                var vendors = await _vendorRatingService.GetAllVendorsAsync();
+                return Ok(vendors);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
     }
 }

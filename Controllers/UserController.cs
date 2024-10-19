@@ -18,13 +18,13 @@ namespace ECommerceBackend.Controllers
             _userService = userService ?? throw new ArgumentNullException(nameof(userService));
         }
 
-        [Authorize(Policy = "AdminPolicy")]
+        [Authorize(Policy = "AdminOrCSRPolicy")]
         [HttpGet("list")]
-        public IActionResult GetUsers()
+        public IActionResult GetUsers([FromQuery] string role = null)
         {
             try
             {
-                var users = _userService.GetUserList();
+                var users = _userService.GetUserList(role);
 
                 if (users == null || !users.Any())
                 {
@@ -128,7 +128,7 @@ namespace ECommerceBackend.Controllers
             }
         }
 
-        [Authorize(Policy = "AdminPolicy")]
+        [Authorize(Policy = "AdminOrCSRPolicy")]
         [HttpPatch("{id}/activate")]
         public IActionResult ActivateUser(string id)
         {
@@ -154,7 +154,7 @@ namespace ECommerceBackend.Controllers
             }
         }
 
-        [Authorize(Policy = "AdminPolicy")]
+        [Authorize(Policy = "AdminOrCSRPolicy")]
         [HttpPatch("{id}/approve")]
         public IActionResult ApproveUser(string id)
         {
@@ -207,6 +207,50 @@ namespace ECommerceBackend.Controllers
             }
             catch (Exception ex)
             {
+                return StatusCode(
+                    500,
+                    new ResponseDTO<string>(false, $"An error occurred: {ex.Message}", null)
+                );
+            }
+        }
+
+        [Authorize]
+        [HttpPut("update-fcm-token")]
+        public IActionResult UpdateFcmToken([FromBody] UpdateFcmTokenRequest model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new ResponseDTO<string>(false, "Invalid request data", null));
+            }
+
+            try
+            {
+                // Extract user ID from JWT claims
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized(
+                        new ResponseDTO<string>(false, "User ID is missing from the token", null)
+                    );
+                }
+
+                // Update the FCM token
+                var updateSuccess = _userService.UpdateFcmToken(userId, model.FcmToken);
+
+                if (!updateSuccess)
+                {
+                    return StatusCode(
+                        500,
+                        new ResponseDTO<string>(false, "Failed to update FCM token", null)
+                    );
+                }
+
+                return Ok(new ResponseDTO<string>(true, "FCM token updated successfully", null));
+            }
+            catch (Exception ex)
+            {
+                // Ideally, log the exception here using a logging framework
                 return StatusCode(
                     500,
                     new ResponseDTO<string>(false, $"An error occurred: {ex.Message}", null)

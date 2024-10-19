@@ -30,6 +30,7 @@ namespace ECommerceBackend.Helpers
                 PhoneNumber = user.PhoneNumber,
                 Profile_pic = user.ProfilePic,
                 Role = user.Role,
+                IsActive = user.IsActive,
                 Address =
                     user.Address != null
                         ? new AddressResponseDTO

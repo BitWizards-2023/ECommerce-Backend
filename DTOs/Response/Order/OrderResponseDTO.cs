@@ -10,5 +10,16 @@ namespace ECommerceBackend.DTOs.Response.Order
         public string PaymentStatus { get; set; }
         public DateTime CreatedAt { get; set; }
         public List<OrderItemDTO> Items { get; set; }
+
+        // New field for internal notes
+        public List<OrderNoteDTO> InternalNotes { get; set; }
+    }
+
+    // Define DTO for order notes
+    public class OrderNoteDTO
+    {
+        public string Note { get; set; }
+        public string AddedBy { get; set; }
+        public DateTime AddedAt { get; set; }
     }
 }

@@ -393,7 +393,7 @@ namespace ECommerceBackend.Controllers
         /// <param name="id">The ID of the order to add a note to.</param>
         /// <param name="addNoteDTO">The note content.</param>
         /// <returns>A response indicating success or failure.</returns>
-        [Authorize(Policy = "AdminOrCSRPolicy")]
+        [Authorize]
         [HttpPost("{id}/notes")]
         public async Task<IActionResult> AddNoteToOrder(string id, [FromBody] AddNoteDTO addNoteDTO)
         {
